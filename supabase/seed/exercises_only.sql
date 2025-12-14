@@ -1,36 +1,16 @@
 -- ============================================
--- THE PROJECT - Banque d'exercices initiale
+-- THE PROJECT - Insertion des exercices uniquement
 -- ============================================
--- 50 exercices de base pour le MVP (musculation)
--- Inspiré de Hexfit (13,000+ exercices)
--- ============================================
-
--- Table pour stocker les exercices prédéfinis
-CREATE TABLE IF NOT EXISTS exercise_library (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  name_fr TEXT NOT NULL,
-  name_en TEXT NOT NULL,
-  muscle_group TEXT NOT NULL, -- chest, back, shoulders, biceps, triceps, legs, core, cardio
-  secondary_muscles TEXT[],
-  equipment TEXT NOT NULL, -- barbell, dumbbell, cable, machine, bodyweight, kettlebell, bands
-  difficulty TEXT NOT NULL DEFAULT 'intermediate', -- beginner, intermediate, advanced
-  exercise_type TEXT NOT NULL DEFAULT 'strength', -- strength, cardio, flexibility, plyometric
-  instructions_fr TEXT,
-  instructions_en TEXT,
-  video_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  is_active BOOLEAN NOT NULL DEFAULT TRUE
-);
-
--- Index pour recherche rapide
-CREATE INDEX IF NOT EXISTS idx_exercise_library_muscle ON exercise_library(muscle_group);
-CREATE INDEX IF NOT EXISTS idx_exercise_library_equipment ON exercise_library(equipment);
-
--- ============================================
--- POITRINE (CHEST)
+-- Exécutez ce script si les tables existent déjà
 -- ============================================
 
+-- Vider la table si nécessaire (optionnel)
+-- DELETE FROM exercise_library;
+
+-- Insérer les exercices
 INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles, equipment, difficulty, instructions_fr) VALUES
+
+-- POITRINE (CHEST)
 ('Développé couché', 'Bench Press', 'chest', ARRAY['triceps', 'shoulders'], 'barbell', 'intermediate', 
  'Allongé sur un banc plat, saisissez la barre avec une prise légèrement plus large que les épaules. Descendez la barre vers le milieu de la poitrine, puis poussez.'),
 
@@ -49,13 +29,10 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Dips', 'Dips', 'chest', ARRAY['triceps', 'shoulders'], 'bodyweight', 'intermediate',
  'Sur des barres parallèles, penchez-vous légèrement vers l''avant. Descendez jusqu''à 90° aux coudes, puis remontez.'),
 
-('Pec Deck', 'Pec Deck Machine', 'chest', ARRAY[]::TEXT[]::TEXT[], 'machine', 'beginner',
+('Pec Deck', 'Pec Deck Machine', 'chest', ARRAY[]::TEXT[], 'machine', 'beginner',
  'Assis sur la machine, ramenez les bras vers le centre en contractant les pectoraux.'),
 
--- ============================================
 -- DOS (BACK)
--- ============================================
-
 ('Tractions', 'Pull-ups', 'back', ARRAY['biceps', 'shoulders'], 'bodyweight', 'intermediate',
  'Suspendez-vous à une barre, paumes vers l''avant. Tirez-vous vers le haut jusqu''à ce que le menton dépasse la barre.'),
 
@@ -80,10 +57,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Soulevé de terre roumain', 'Romanian Deadlift', 'back', ARRAY['hamstrings', 'glutes'], 'barbell', 'intermediate',
  'Debout avec la barre, descendez en gardant les jambes quasi tendues, puis remontez.'),
 
--- ============================================
 -- ÉPAULES (SHOULDERS)
--- ============================================
-
 ('Développé militaire', 'Overhead Press', 'shoulders', ARRAY['triceps'], 'barbell', 'intermediate',
  'Debout, poussez la barre au-dessus de la tête en partant des épaules.'),
 
@@ -102,10 +76,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Face Pull', 'Face Pull', 'shoulders', ARRAY['back'], 'cable', 'beginner',
  'Tirez la corde vers le visage en écartant les mains, coudes hauts.'),
 
--- ============================================
 -- BICEPS
--- ============================================
-
 ('Curl barre', 'Barbell Curl', 'biceps', ARRAY['forearms'], 'barbell', 'beginner',
  'Debout, montez la barre en fléchissant les coudes, gardez les coudes fixes.'),
 
@@ -121,10 +92,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Curl concentré', 'Concentration Curl', 'biceps', ARRAY[]::TEXT[], 'dumbbell', 'beginner',
  'Assis, coude contre la cuisse, effectuez un curl en isolation.'),
 
--- ============================================
 -- TRICEPS
--- ============================================
-
 ('Extension triceps poulie', 'Tricep Pushdown', 'triceps', ARRAY[]::TEXT[], 'cable', 'beginner',
  'Poussez la barre ou la corde vers le bas en gardant les coudes fixes.'),
 
@@ -140,10 +108,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Kickback', 'Tricep Kickback', 'triceps', ARRAY[]::TEXT[], 'dumbbell', 'beginner',
  'Penché, tendez le bras vers l''arrière en gardant le coude fixe.'),
 
--- ============================================
 -- JAMBES (LEGS)
--- ============================================
-
 ('Squat', 'Back Squat', 'legs', ARRAY['core', 'glutes'], 'barbell', 'intermediate',
  'Barre sur les trapèzes, descendez jusqu''à ce que les cuisses soient parallèles au sol.'),
 
@@ -177,10 +142,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 ('Mollets assis', 'Seated Calf Raise', 'legs', ARRAY[]::TEXT[], 'machine', 'beginner',
  'Assis avec les poids sur les genoux, effectuez des élévations de mollets.'),
 
--- ============================================
 -- ABDOMINAUX (CORE)
--- ============================================
-
 ('Crunch', 'Crunch', 'core', ARRAY[]::TEXT[], 'bodyweight', 'beginner',
  'Allongé, soulevez les épaules du sol en contractant les abdominaux.'),
 
@@ -200,16 +162,7 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
  'À genoux avec la roue, roulez vers l''avant puis revenez.'),
 
 ('Mountain Climber', 'Mountain Climbers', 'core', ARRAY['shoulders', 'legs'], 'bodyweight', 'beginner',
- 'En position de planche, ramenez alternativement les genoux vers la poitrine.');
+ 'En position de planche, ramenez alternativement les genoux vers la poitrine.')
 
--- ============================================
--- RLS pour exercise_library
--- ============================================
-
-ALTER TABLE exercise_library ENABLE ROW LEVEL SECURITY;
-
--- Tout le monde peut lire les exercices
-CREATE POLICY "Anyone can read exercises"
-  ON exercise_library FOR SELECT
-  USING (is_active = TRUE);
+ON CONFLICT DO NOTHING;
 
