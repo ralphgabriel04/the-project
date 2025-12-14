@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, Button, EmptyState, Badge } from "@/components/ui";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
@@ -69,10 +70,12 @@ export default async function ProgramsPage() {
           </p>
         </div>
         {isCoach && (
-          <Button className="sm:w-auto">
-            <PlusIcon className="h-5 w-5 mr-2" />
-            Créer un programme
-          </Button>
+          <Link href="/dashboard/programs/new">
+            <Button className="sm:w-auto">
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Créer un programme
+            </Button>
+          </Link>
         )}
       </div>
 

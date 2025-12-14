@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, EmptyState, Badge } from "@/components/ui";
+import { InvitationActions } from "@/components/athletes/athlete-actions";
 
 export const metadata = {
   title: "Mes Coachs",
@@ -17,6 +18,17 @@ export default async function CoachesPage() {
     redirect("/login");
   }
 
+  // Verify user is an athlete
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "athlete") {
+    redirect("/dashboard");
+  }
+
   // Get athlete's coaches
   const { data: relationships } = await supabase
     .from("coach_athletes")
@@ -25,7 +37,8 @@ export default async function CoachesPage() {
       coach:profiles!coach_athletes_coach_id_fkey(*)
     `)
     .eq("athlete_id", user.id)
-    .eq("is_deleted", false);
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false });
 
   const coaches = relationships || [];
   const activeCoaches = coaches.filter((r) => r.status === "accepted");
@@ -73,14 +86,7 @@ export default async function CoachesPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">
-                      Accepter
-                    </button>
-                    <button className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-colors">
-                      Refuser
-                    </button>
-                  </div>
+                  <InvitationActions invitationId={invite.id} />
                 </div>
               ))}
             </div>
@@ -145,4 +151,3 @@ function CoachCard({
     </div>
   );
 }
-

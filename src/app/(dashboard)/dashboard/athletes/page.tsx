@@ -1,7 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Card, CardContent, CardHeader, Button, EmptyState, Badge } from "@/components/ui";
-import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Card, CardContent, CardHeader, EmptyState, Badge } from "@/components/ui";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { AthletesHeader } from "@/components/athletes/athletes-client";
 
 export const metadata = {
   title: "Mes Athlètes",
@@ -18,6 +19,17 @@ export default async function AthletesPage() {
     redirect("/login");
   }
 
+  // Verify user is a coach
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.role !== "coach") {
+    redirect("/dashboard");
+  }
+
   // Get coach's athletes
   const { data: relationships } = await supabase
     .from("coach_athletes")
@@ -26,7 +38,8 @@ export default async function AthletesPage() {
       athlete:profiles!coach_athletes_athlete_id_fkey(*)
     `)
     .eq("coach_id", user.id)
-    .eq("is_deleted", false);
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false });
 
   const athletes = relationships || [];
   const pendingCount = athletes.filter((r) => r.status === "pending").length;
@@ -42,10 +55,7 @@ export default async function AthletesPage() {
             Gérez vos athlètes et leurs programmes
           </p>
         </div>
-        <Button className="sm:w-auto">
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Inviter un athlète
-        </Button>
+        <AthletesHeader />
       </div>
 
       {/* Stats */}
@@ -88,10 +98,6 @@ export default async function AthletesPage() {
               icon="👥"
               title="Aucun athlète pour le moment"
               description="Invitez vos premiers athlètes pour commencer à créer des programmes personnalisés."
-              action={{
-                label: "Inviter un athlète",
-                href: "#",
-              }}
             />
           ) : (
             <div className="divide-y divide-slate-700">
@@ -160,11 +166,13 @@ function AthleteRow({
         <Badge variant={status === "accepted" ? "success" : "warning"}>
           {status === "accepted" ? "Actif" : "En attente"}
         </Badge>
-        <Button variant="ghost" size="sm">
+        <a
+          href={`/dashboard/athletes/${athlete}`}
+          className="px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+        >
           Voir
-        </Button>
+        </a>
       </div>
     </div>
   );
 }
-
