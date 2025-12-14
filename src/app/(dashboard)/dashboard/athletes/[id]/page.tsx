@@ -68,6 +68,24 @@ export default async function AthletePage({ params }: PageProps) {
 
   const programs = assignments || [];
 
+  // Get recent session logs
+  const { data: recentLogs } = await supabase
+    .from("session_logs")
+    .select(`
+      *,
+      session:sessions(
+        name,
+        program:programs(name)
+      )
+    `)
+    .eq("athlete_id", id)
+    .eq("is_deleted", false)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  const sessionLogs = recentLogs || [];
+  const completedSessions = sessionLogs.filter((log) => log.completed_at !== null).length;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -112,13 +130,13 @@ export default async function AthletePage({ params }: PageProps) {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-slate-400">Séances complétées</p>
-            <p className="text-2xl font-bold text-emerald-400">0</p>
+            <p className="text-2xl font-bold text-emerald-400">{completedSessions}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-400">Cette semaine</p>
-            <p className="text-2xl font-bold text-white">0</p>
+            <p className="text-sm text-slate-400">Récentes</p>
+            <p className="text-2xl font-bold text-white">{sessionLogs.length}</p>
           </CardContent>
         </Card>
         <Card>
@@ -201,17 +219,76 @@ export default async function AthletePage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      {/* Recent Activity (placeholder) */}
+      {/* Recent Activity */}
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold text-white">Activité récente</h2>
         </CardHeader>
         <CardContent>
-          <EmptyState
-            icon="📊"
-            title="Aucune activité"
-            description="L'historique d'entraînement de l'athlète apparaîtra ici."
-          />
+          {sessionLogs.length === 0 ? (
+            <EmptyState
+              icon="📊"
+              title="Aucune activité"
+              description="L'historique d'entraînement de l'athlète apparaîtra ici."
+            />
+          ) : (
+            <div className="space-y-3">
+              {sessionLogs.map((log: {
+                id: string;
+                completed_at: string | null;
+                overall_rpe: number | null;
+                athlete_notes: string | null;
+                created_at: string;
+                session: {
+                  name: string;
+                  program: { name: string };
+                };
+              }) => (
+                <div
+                  key={log.id}
+                  className="p-4 bg-slate-700/50 rounded-lg"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <p className="font-medium text-white">
+                        {log.session?.name || "Séance"}
+                      </p>
+                      <p className="text-sm text-slate-400">
+                        {log.session?.program?.name || "Programme"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      {log.completed_at ? (
+                        <Badge variant="success">Terminée</Badge>
+                      ) : (
+                        <Badge variant="warning">En cours</Badge>
+                      )}
+                      <p className="text-xs text-slate-500 mt-1">
+                        {new Date(log.created_at).toLocaleDateString("fr-FR", {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                  {(log.overall_rpe || log.athlete_notes) && (
+                    <div className="mt-3 pt-3 border-t border-slate-600">
+                      {log.overall_rpe && (
+                        <p className="text-sm text-slate-400">
+                          RPE: <span className="text-amber-400 font-medium">{log.overall_rpe}/10</span>
+                        </p>
+                      )}
+                      {log.athlete_notes && (
+                        <p className="text-sm text-slate-400 mt-1 italic">
+                          "{log.athlete_notes}"
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
