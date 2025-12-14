@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, Button, Input } from "@/components/ui";
+import { Card, CardContent, CardHeader, Button, Input, useToast } from "@/components/ui";
 import { logExerciseSet } from "@/lib/actions/training";
 import { CheckIcon, PlusIcon } from "@heroicons/react/24/outline";
 
@@ -36,8 +36,10 @@ export function TrainingExerciseCard({
   exerciseLogs,
   isCompleted,
 }: TrainingExerciseCardProps) {
+  const { addToast } = useToast();
   const [sets, setSets] = useState<ExerciseLog[]>(exerciseLogs);
   const [isAddingSet, setIsAddingSet] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [newSet, setNewSet] = useState({
     weight: "",
     reps: "",
@@ -48,9 +50,13 @@ export function TrainingExerciseCard({
   const completedSets = sets.length;
 
   const handleAddSet = async () => {
-    if (!sessionLogId) return;
+    if (!sessionLogId) {
+      setError("Session non trouvée");
+      return;
+    }
     
     setIsAddingSet(true);
+    setError(null);
     
     const formData = new FormData();
     formData.set("set_number", (completedSets + 1).toString());
@@ -72,6 +78,10 @@ export function TrainingExerciseCard({
         },
       ]);
       setNewSet({ weight: "", reps: "", rpe: "" });
+      addToast({ type: "success", title: `Série ${completedSets + 1} ajoutée ✓` });
+    } else {
+      setError(result.error || "Erreur lors de l'enregistrement");
+      addToast({ type: "error", title: "Erreur", message: result.error });
     }
     
     setIsAddingSet(false);
@@ -186,6 +196,9 @@ export function TrainingExerciseCard({
                 />
               </div>
             </div>
+            {error && (
+              <p className="text-sm text-red-400 mb-2">{error}</p>
+            )}
             <Button
               onClick={handleAddSet}
               disabled={isAddingSet || (!newSet.weight && !newSet.reps)}
