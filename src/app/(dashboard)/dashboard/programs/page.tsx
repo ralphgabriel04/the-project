@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, Button, EmptyState, Badge } from "@/components/ui";
+import { Card, CardContent, CardHeader, EmptyState, Badge } from "@/components/ui";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export const metadata = {
@@ -167,31 +167,33 @@ function ProgramCard({
   };
 
   return (
-    <Card className="hover:border-emerald-500/50 transition-colors cursor-pointer">
-      <CardHeader>
-        <div className="flex items-start justify-between">
-          <h3 className="font-semibold text-white">{program.name}</h3>
-          <Badge variant={statusColors[program.status as keyof typeof statusColors] || "default"}>
-            {statusLabels[program.status as keyof typeof statusLabels] || program.status}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-slate-400 line-clamp-2 mb-4">
-          {program.description || "Aucune description"}
-        </p>
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-slate-500">
-            {program.duration_weeks
-              ? `${program.duration_weeks} semaines`
-              : "Durée non définie"}
-          </span>
-          <Button variant="ghost" size="sm">
-            {isCoach ? "Modifier" : "Voir"}
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+    <Link href={`/dashboard/programs/${program.id}`}>
+      <Card className="hover:border-emerald-500/50 transition-colors cursor-pointer h-full">
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <h3 className="font-semibold text-white">{program.name}</h3>
+            <Badge variant={statusColors[program.status as keyof typeof statusColors] || "default"}>
+              {statusLabels[program.status as keyof typeof statusLabels] || program.status}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-slate-400 line-clamp-2 mb-4">
+            {program.description || "Aucune description"}
+          </p>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-slate-500">
+              {program.duration_weeks
+                ? `${program.duration_weeks} semaines`
+                : "Durée non définie"}
+            </span>
+            <span className="text-emerald-400 hover:text-emerald-300 font-medium">
+              {isCoach ? "Modifier →" : "Voir →"}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 

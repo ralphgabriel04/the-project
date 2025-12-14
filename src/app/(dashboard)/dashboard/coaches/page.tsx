@@ -41,8 +41,10 @@ export default async function CoachesPage() {
     .order("created_at", { ascending: false });
 
   const coaches = relationships || [];
-  const activeCoaches = coaches.filter((r) => r.status === "accepted");
-  const pendingInvites = coaches.filter((r) => r.status === "pending");
+  // Filter out relationships where coach profile is null
+  const validCoaches = coaches.filter((r) => r.coach !== null);
+  const activeCoaches = validCoaches.filter((r) => r.status === "accepted");
+  const pendingInvites = validCoaches.filter((r) => r.status === "pending");
 
   return (
     <div className="space-y-6">
@@ -67,28 +69,31 @@ export default async function CoachesPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {pendingInvites.map((invite) => (
-                <div
-                  key={invite.id}
-                  className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold">
-                      {invite.coach.first_name[0]}
-                      {invite.coach.last_name[0]}
+              {pendingInvites.map((invite) => {
+                const coach = invite.coach;
+                const initials = `${coach?.first_name?.[0] || "?"}${coach?.last_name?.[0] || "?"}`;
+                const fullName = `${coach?.first_name || "Coach"} ${coach?.last_name || "Inconnu"}`;
+                
+                return (
+                  <div
+                    key={invite.id}
+                    className="flex items-center justify-between p-4 bg-slate-700/50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold">
+                        {initials}
+                      </div>
+                      <div>
+                        <p className="font-medium text-white">{fullName}</p>
+                        <p className="text-sm text-slate-400">
+                          Vous invite à rejoindre son équipe
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium text-white">
-                        {invite.coach.first_name} {invite.coach.last_name}
-                      </p>
-                      <p className="text-sm text-slate-400">
-                        Vous invite à rejoindre son équipe
-                      </p>
-                    </div>
+                    <InvitationActions invitationId={invite.id} />
                   </div>
-                  <InvitationActions invitationId={invite.id} />
-                </div>
-              ))}
+                );
+              })}
             </div>
           </CardContent>
         </Card>
@@ -125,27 +130,30 @@ function CoachCard({
   coach,
 }: {
   coach: {
-    first_name: string;
-    last_name: string;
+    first_name?: string | null;
+    last_name?: string | null;
     bio?: string | null;
     avatar_url?: string | null;
-  };
+  } | null;
 }) {
+  const firstName = coach?.first_name || "Coach";
+  const lastName = coach?.last_name || "Inconnu";
+  const initials = `${firstName[0] || "?"}${lastName[0] || "?"}`;
+  
   return (
     <div className="flex items-start gap-4 p-4 bg-slate-700/50 rounded-lg">
       <div className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
-        {coach.first_name[0]}
-        {coach.last_name[0]}
+        {initials}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <p className="font-semibold text-white">
-            {coach.first_name} {coach.last_name}
+            {firstName} {lastName}
           </p>
           <Badge variant="coach">Coach</Badge>
         </div>
         <p className="text-sm text-slate-400 mt-1 line-clamp-2">
-          {coach.bio || "Aucune description"}
+          {coach?.bio || "Aucune description"}
         </p>
       </div>
     </div>

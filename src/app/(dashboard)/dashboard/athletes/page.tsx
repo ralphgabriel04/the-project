@@ -41,7 +41,9 @@ export default async function AthletesPage() {
     .eq("is_deleted", false)
     .order("created_at", { ascending: false });
 
-  const athletes = relationships || [];
+  const allRelationships = relationships || [];
+  // Filter out relationships where athlete profile is null
+  const athletes = allRelationships.filter((r) => r.athlete !== null);
   const pendingCount = athletes.filter((r) => r.status === "pending").length;
   const activeCount = athletes.filter((r) => r.status === "accepted").length;
 
@@ -106,6 +108,7 @@ export default async function AthletesPage() {
                   key={relationship.id}
                   athlete={relationship.athlete}
                   status={relationship.status}
+                  relationshipId={relationship.id}
                 />
               ))}
             </div>
@@ -144,20 +147,30 @@ function StatCard({
 function AthleteRow({
   athlete,
   status,
+  relationshipId,
 }: {
-  athlete: { first_name: string; last_name: string; avatar_url?: string | null };
+  athlete: { 
+    id?: string;
+    first_name?: string | null; 
+    last_name?: string | null; 
+    avatar_url?: string | null;
+  } | null;
   status: string;
+  relationshipId: string;
 }) {
+  const firstName = athlete?.first_name || "Athlète";
+  const lastName = athlete?.last_name || "Inconnu";
+  const initials = `${firstName[0] || "?"}${lastName[0] || "?"}`;
+  
   return (
     <div className="flex items-center justify-between py-4">
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold">
-          {athlete.first_name[0]}
-          {athlete.last_name[0]}
+          {initials}
         </div>
         <div>
           <p className="font-medium text-white">
-            {athlete.first_name} {athlete.last_name}
+            {firstName} {lastName}
           </p>
           <p className="text-sm text-slate-400">Aucun programme actif</p>
         </div>
@@ -166,12 +179,14 @@ function AthleteRow({
         <Badge variant={status === "accepted" ? "success" : "warning"}>
           {status === "accepted" ? "Actif" : "En attente"}
         </Badge>
-        <a
-          href={`/dashboard/athletes/${athlete}`}
-          className="px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
-        >
-          Voir
-        </a>
+        {athlete?.id && (
+          <a
+            href={`/dashboard/athletes/${athlete.id}`}
+            className="px-3 py-1.5 text-sm text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors"
+          >
+            Voir
+          </a>
+        )}
       </div>
     </div>
   );
