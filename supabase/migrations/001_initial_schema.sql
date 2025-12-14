@@ -151,7 +151,7 @@ CREATE TABLE session_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   session_id UUID NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
   athlete_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  completed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  completed_at TIMESTAMPTZ,  -- NULL until session is actually completed
   duration_minutes INTEGER,
   overall_rpe INTEGER CHECK (overall_rpe >= 1 AND overall_rpe <= 10),
   athlete_notes TEXT,

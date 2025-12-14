@@ -113,8 +113,30 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       a.order_index - b.order_index
     );
 
+  // Handle case where session log couldn't be created
+  if (!sessionLog) {
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <div className="flex items-start gap-4">
+          <Link
+            href={`/dashboard/programs/${session.program.id}`}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-700 rounded-lg transition-colors mt-1"
+          >
+            <ArrowLeftIcon className="h-5 w-5" />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold text-white">{session.name}</h1>
+            <p className="text-red-400 mt-2">
+              Erreur : Impossible de démarrer la séance. Veuillez réessayer ou contacter le support.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Session is completed only if completed_at has a value
-  const isCompleted = !!sessionLog?.completed_at;
+  const isCompleted = !!sessionLog.completed_at;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
