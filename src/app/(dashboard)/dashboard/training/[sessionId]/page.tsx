@@ -82,13 +82,12 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     `)
     .eq("session_id", sessionId)
     .eq("athlete_id", user.id)
-    .gte("created_at", `${today}T00:00:00`)
-    .lte("created_at", `${today}T23:59:59`)
+    .is("completed_at", null) // Only get incomplete sessions
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
 
-  // If no session log exists, create one
+  // If no incomplete session log exists, create a new one
   if (!sessionLog) {
     const { data: newLog } = await supabase
       .from("session_logs")
