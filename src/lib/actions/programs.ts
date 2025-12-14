@@ -514,13 +514,26 @@ export async function deleteExercise(exerciseId: string): Promise<ActionResult> 
     return { success: false, error: "Non authentifié" };
   }
 
+  // Get exercise to find its session and program for revalidation
+  const { data: exercise } = await supabase
+    .from("exercises")
+    .select("session_id, session:sessions(program_id)")
+    .eq("id", exerciseId)
+    .single();
+
   const { error } = await supabase
     .from("exercises")
     .update({ is_deleted: true })
     .eq("id", exerciseId);
 
   if (error) {
-    return { success: false, error: "Erreur lors de la suppression" };
+    console.error("Delete exercise error:", error);
+    return { success: false, error: `Erreur: ${error.message}` };
+  }
+
+  // Revalidate the program page
+  if (exercise?.session?.program_id) {
+    revalidatePath(`/dashboard/programs/${exercise.session.program_id}`);
   }
 
   return { success: true, message: "Exercice supprimé" };
