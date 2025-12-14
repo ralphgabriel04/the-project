@@ -369,19 +369,30 @@ export async function deleteSession(sessionId: string): Promise<ActionResult> {
     return { success: false, error: "Non authentifié" };
   }
 
-  const { data: session, error } = await supabase
+  // Get program_id before deletion for revalidation
+  const { data: sessionData } = await supabase
     .from("sessions")
-    .update({ is_deleted: true })
-    .eq("id", sessionId)
     .select("program_id")
+    .eq("id", sessionId)
     .single();
+
+  // Use RPC function to bypass RLS issues
+  const { data: success, error } = await supabase.rpc("soft_delete_session", {
+    session_uuid: sessionId,
+  });
 
   if (error) {
     console.error("Delete session error:", error);
     return { success: false, error: `Erreur: ${error.message}` };
   }
 
-  revalidatePath(`/dashboard/programs/${session.program_id}`);
+  if (!success) {
+    return { success: false, error: "Vous n'êtes pas autorisé à supprimer cette séance" };
+  }
+
+  if (sessionData?.program_id) {
+    revalidatePath(`/dashboard/programs/${sessionData.program_id}`);
+  }
 
   return { success: true, message: "Séance supprimée" };
 }
@@ -523,19 +534,24 @@ export async function deleteExercise(exerciseId: string): Promise<ActionResult> 
     .eq("id", exerciseId)
     .single();
 
-  const { error } = await supabase
-    .from("exercises")
-    .update({ is_deleted: true })
-    .eq("id", exerciseId);
+  // Use RPC function to bypass RLS issues
+  const { data: success, error } = await supabase.rpc("soft_delete_exercise", {
+    exercise_uuid: exerciseId,
+  });
 
   if (error) {
     console.error("Delete exercise error:", error);
     return { success: false, error: `Erreur: ${error.message}` };
   }
 
+  if (!success) {
+    return { success: false, error: "Vous n'êtes pas autorisé à supprimer cet exercice" };
+  }
+
   // Revalidate the program page
-  if (exercise?.session?.program_id) {
-    revalidatePath(`/dashboard/programs/${exercise.session.program_id}`);
+  const programId = (exercise?.session as { program_id?: string })?.program_id;
+  if (programId) {
+    revalidatePath(`/dashboard/programs/${programId}`);
   }
 
   return { success: true, message: "Exercice supprimé" };
