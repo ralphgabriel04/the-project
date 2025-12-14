@@ -38,21 +38,23 @@ export function Modal({
       />
 
       {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
         <div
           className={`
             w-full ${sizeStyles[size]}
             bg-slate-800 border border-slate-700
             rounded-2xl shadow-2xl
             animate-in zoom-in-95 fade-in duration-200
+            my-auto max-h-[90vh] flex flex-col
           `}
           role="dialog"
           aria-modal="true"
           aria-labelledby={title ? "modal-title" : undefined}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 flex-shrink-0">
               <h2
                 id="modal-title"
                 className="text-lg font-semibold text-white"
@@ -68,8 +70,10 @@ export function Modal({
             </div>
           )}
 
-          {/* Content */}
-          <div className={title ? "" : "pt-4"}>{children}</div>
+          {/* Content - scrollable */}
+          <div className={`${title ? "" : "pt-4"} overflow-y-auto flex-1`}>
+            {children}
+          </div>
         </div>
       </div>
     </Fragment>
