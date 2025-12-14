@@ -6,6 +6,7 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { TrainingExerciseCard } from "@/components/training/exercise-card";
 import { CompleteSessionButton } from "@/components/training/complete-session";
 import { ImageUpload } from "@/components/training/image-upload";
+import { SessionTimer } from "@/components/training/session-timer";
 
 interface PageProps {
   params: Promise<{ sessionId: string }>;
@@ -138,6 +139,17 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* Timer */}
+      {sessionLog && (
+        <div className="flex justify-center">
+          <SessionTimer
+            startTime={sessionLog.created_at}
+            isCompleted={isCompleted}
+            completedAt={sessionLog.completed_at}
+          />
+        </div>
+      )}
+
       {/* Session info */}
       <Card>
         <CardContent className="p-4">
@@ -150,7 +162,10 @@ export default async function TrainingSessionPage({ params }: PageProps) {
               <span>📅 {new Date().toLocaleDateString("fr-FR")}</span>
             </div>
             {!isCompleted && sessionLog && (
-              <CompleteSessionButton sessionLogId={sessionLog.id} />
+              <CompleteSessionButton 
+                sessionLogId={sessionLog.id}
+                startTime={sessionLog.created_at}
+              />
             )}
           </div>
         </CardContent>
@@ -218,7 +233,8 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       {!isCompleted && sessionLog && (
         <div className="sticky bottom-6 flex justify-center">
           <CompleteSessionButton 
-            sessionLogId={sessionLog.id} 
+            sessionLogId={sessionLog.id}
+            startTime={sessionLog.created_at}
             variant="large"
           />
         </div>

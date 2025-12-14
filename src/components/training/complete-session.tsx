@@ -8,11 +8,13 @@ import { useRouter } from "next/navigation";
 
 interface CompleteSessionButtonProps {
   sessionLogId: string;
+  startTime?: string;
   variant?: "default" | "large";
 }
 
 export function CompleteSessionButton({
   sessionLogId,
+  startTime,
   variant = "default",
 }: CompleteSessionButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -29,6 +31,14 @@ export function CompleteSessionButton({
     const formData = new FormData();
     if (rpe) formData.set("rpe", rpe.toString());
     if (notes) formData.set("notes", notes);
+    
+    // Calculate duration if startTime is provided
+    if (startTime) {
+      const start = new Date(startTime).getTime();
+      const now = Date.now();
+      const durationMinutes = Math.round((now - start) / 60000);
+      formData.set("duration_minutes", durationMinutes.toString());
+    }
 
     const result = await completeSession(sessionLogId, formData);
 
