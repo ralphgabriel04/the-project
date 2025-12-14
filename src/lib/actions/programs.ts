@@ -128,7 +128,8 @@ export async function deleteProgram(programId: string): Promise<ActionResult> {
     .eq("coach_id", user.id);
 
   if (error) {
-    return { success: false, error: "Erreur lors de la suppression" };
+    console.error("Delete program error:", error);
+    return { success: false, error: `Erreur: ${error.message}` };
   }
 
   revalidatePath("/dashboard/programs");
@@ -376,7 +377,8 @@ export async function deleteSession(sessionId: string): Promise<ActionResult> {
     .single();
 
   if (error) {
-    return { success: false, error: "Erreur lors de la suppression" };
+    console.error("Delete session error:", error);
+    return { success: false, error: `Erreur: ${error.message}` };
   }
 
   revalidatePath(`/dashboard/programs/${session.program_id}`);
