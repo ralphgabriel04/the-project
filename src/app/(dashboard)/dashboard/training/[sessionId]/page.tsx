@@ -78,7 +78,8 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     .from("session_logs")
     .select(`
       *,
-      exercise_logs(*)
+      exercise_logs(*),
+      session_images(*)
     `)
     .eq("session_id", sessionId)
     .eq("athlete_id", user.id)
@@ -95,7 +96,7 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         session_id: sessionId,
         athlete_id: user.id,
       })
-      .select("*, exercise_logs(*)")
+      .select("*, exercise_logs(*), session_images(*)")
       .single();
     
     if (insertError) {
@@ -229,19 +230,39 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         )}
       </div>
 
-      {/* Photo upload */}
+      {/* Photos section */}
       {sessionLog && (
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-white">📸 Photos</h2>
           </CardHeader>
           <CardContent>
+            {/* Show existing photos */}
+            {sessionLog.session_images && sessionLog.session_images.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4">
+                {sessionLog.session_images
+                  .filter((img: { is_deleted?: boolean }) => !img.is_deleted)
+                  .map((image: { id: string; image_url: string; caption?: string }) => (
+                    <div key={image.id} className="relative group">
+                      <img
+                        src={image.image_url}
+                        alt={image.caption || "Photo de séance"}
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                    </div>
+                  ))}
+              </div>
+            )}
+            
+            {/* Upload new photo (only if not completed) */}
             {!isCompleted ? (
               <ImageUpload sessionLogId={sessionLog.id} />
             ) : (
-              <p className="text-sm text-slate-400 text-center py-4">
-                Session terminée. Pas de nouvelles photos.
-              </p>
+              sessionLog.session_images?.length === 0 && (
+                <p className="text-sm text-slate-400 text-center py-4">
+                  Aucune photo pour cette séance.
+                </p>
+              )
             )}
           </CardContent>
         </Card>
