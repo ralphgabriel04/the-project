@@ -90,7 +90,7 @@ export default async function TrainingSessionPage({ params }: PageProps) {
 
   // If no incomplete session log exists, create a new one
   if (!sessionLog) {
-    const { data: newLog } = await supabase
+    const { data: newLog, error: insertError } = await supabase
       .from("session_logs")
       .insert({
         session_id: sessionId,
@@ -98,6 +98,10 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       })
       .select("*, exercise_logs(*)")
       .single();
+    
+    if (insertError) {
+      console.error("Error creating session log:", insertError);
+    }
     
     sessionLog = newLog;
   }
@@ -109,7 +113,8 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       a.order_index - b.order_index
     );
 
-  const isCompleted = sessionLog?.completed_at !== null;
+  // Session is completed only if completed_at has a value
+  const isCompleted = !!sessionLog?.completed_at;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
