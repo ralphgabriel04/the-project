@@ -180,20 +180,12 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       {/* Session info */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-6 text-sm text-slate-400">
-              <span>📋 {exercises.length} exercices</span>
-              {session.estimated_duration_minutes && (
-                <span>⏱️ ~{session.estimated_duration_minutes} min</span>
-              )}
-              <span>📅 {new Date().toLocaleDateString("fr-FR")}</span>
-            </div>
-            {!isCompleted && sessionLog && (
-              <CompleteSessionButton 
-                sessionLogId={sessionLog.id}
-                startTime={sessionLog.created_at}
-              />
+          <div className="flex items-center gap-6 text-sm text-slate-400 flex-wrap">
+            <span>📋 {exercises.length} exercices</span>
+            {session.estimated_duration_minutes && (
+              <span>⏱️ ~{session.estimated_duration_minutes} min</span>
             )}
+            <span>📅 {new Date().toLocaleDateString("fr-FR")}</span>
           </div>
         </CardContent>
       </Card>

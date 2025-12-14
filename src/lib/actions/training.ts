@@ -274,7 +274,7 @@ export async function uploadSessionImage(
     .insert({
       session_log_id: sessionLogId,
       image_url: urlData.publicUrl,
-      uploaded_by: user.id,
+      athlete_id: user.id,
     })
     .select("id")
     .single();
