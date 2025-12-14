@@ -104,7 +104,9 @@ export async function completeSession(
     return { success: false, error: "Erreur lors de la validation" };
   }
 
-  revalidatePath("/dashboard/programs");
+  // Revalidate all relevant paths
+  revalidatePath("/dashboard/programs", "layout");
+  revalidatePath("/dashboard/training", "layout");
 
   return {
     success: true,

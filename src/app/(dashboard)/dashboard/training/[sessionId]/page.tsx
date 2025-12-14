@@ -73,8 +73,7 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     notFound();
   }
 
-  // Get or create today's session log
-  const today = new Date().toISOString().split("T")[0];
+  // Get the most recent session log for this session (completed or not)
   let { data: sessionLog } = await supabase
     .from("session_logs")
     .select(`
@@ -83,12 +82,12 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     `)
     .eq("session_id", sessionId)
     .eq("athlete_id", user.id)
-    .is("completed_at", null) // Only get incomplete sessions
     .order("created_at", { ascending: false })
     .limit(1)
     .single();
 
-  // If no incomplete session log exists, create a new one
+  // If no session log exists, create a new one
+  // If the most recent one is completed, allow viewing but don't create new
   if (!sessionLog) {
     const { data: newLog, error: insertError } = await supabase
       .from("session_logs")
