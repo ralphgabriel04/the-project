@@ -38,8 +38,19 @@ export default async function ProgramPage({ params }: PageProps) {
     redirect("/login");
   }
 
+  // Get user's role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isCoach = profile?.role === "coach";
+
   // Get program with sessions and exercises
-  const { data: program, error } = await supabase
+  // For coaches: filter by coach_id
+  // For athletes: RLS will filter automatically based on assignments
+  let query = supabase
     .from("programs")
     .select(`
       *,
@@ -53,9 +64,14 @@ export default async function ProgramPage({ params }: PageProps) {
       )
     `)
     .eq("id", id)
-    .eq("coach_id", user.id)
-    .eq("is_deleted", false)
-    .single();
+    .eq("is_deleted", false);
+
+  // Only coaches need to filter by coach_id
+  if (isCoach) {
+    query = query.eq("coach_id", user.id);
+  }
+
+  const { data: program, error } = await query.single();
 
   if (error || !program) {
     notFound();
@@ -132,18 +148,22 @@ export default async function ProgramPage({ params }: PageProps) {
           </div>
         </div>
 
-        <ProgramActions programId={program.id} programName={program.name} />
+        {isCoach && (
+          <ProgramActions programId={program.id} programName={program.name} />
+        )}
       </div>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-3">
-        <AddSessionButton programId={program.id} />
-        <AssignProgramButton
-          programId={program.id}
-          athletes={availableAthletes}
-          assignedAthleteIds={assignedAthleteIds}
-        />
-      </div>
+      {/* Quick actions - Coach only */}
+      {isCoach && (
+        <div className="flex flex-wrap gap-3">
+          <AddSessionButton programId={program.id} />
+          <AssignProgramButton
+            programId={program.id}
+            athletes={availableAthletes}
+            assignedAthleteIds={assignedAthleteIds}
+          />
+        </div>
+      )}
 
       {/* Assigned athletes */}
       {program.program_assignments && program.program_assignments.length > 0 && (

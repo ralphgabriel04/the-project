@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, EmptyState, Badge } from "@/components/ui";
+import { Card, CardContent, CardHeader, Button, EmptyState, Badge } from "@/components/ui";
 import { PlusIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 
 export const metadata = {
