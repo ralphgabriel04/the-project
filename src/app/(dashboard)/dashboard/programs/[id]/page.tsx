@@ -7,6 +7,7 @@ import { ProgramActions } from "@/components/programs/program-actions";
 import { SessionCard } from "@/components/programs/session-card";
 import { AddSessionButton } from "@/components/programs/add-session";
 import { AssignProgramButton } from "@/components/programs/assign-program";
+import { AthleteSessionCard } from "@/components/training/athlete-session-card";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -81,6 +82,34 @@ export default async function ProgramPage({ params }: PageProps) {
   const sessions = (program.sessions || [])
     .filter((s: { is_deleted: boolean }) => !s.is_deleted)
     .sort((a: { order_index: number }, b: { order_index: number }) => a.order_index - b.order_index);
+
+  // For athletes: get their session logs for this program's sessions
+  let sessionLogsMap: Record<string, Array<{
+    id: string;
+    completed_at: string | null;
+    overall_rpe: number | null;
+    created_at: string;
+  }>> = {};
+
+  if (!isCoach) {
+    const sessionIds = sessions.map((s: { id: string }) => s.id);
+    if (sessionIds.length > 0) {
+      const { data: logs } = await supabase
+        .from("session_logs")
+        .select("id, session_id, completed_at, overall_rpe, created_at")
+        .eq("athlete_id", user.id)
+        .in("session_id", sessionIds)
+        .order("created_at", { ascending: false });
+
+      // Group logs by session_id
+      (logs || []).forEach((log: { session_id: string; id: string; completed_at: string | null; overall_rpe: number | null; created_at: string }) => {
+        if (!sessionLogsMap[log.session_id]) {
+          sessionLogsMap[log.session_id] = [];
+        }
+        sessionLogsMap[log.session_id].push(log);
+      });
+    }
+  }
 
   // Get athletes for assignment
   const { data: athletes } = await supabase
@@ -208,12 +237,15 @@ export default async function ProgramPage({ params }: PageProps) {
               <EmptyState
                 icon="📋"
                 title="Aucune séance"
-                description="Ajoutez votre première séance à ce programme."
+                description={isCoach 
+                  ? "Ajoutez votre première séance à ce programme."
+                  : "Ce programme n'a pas encore de séances."
+                }
               />
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className={isCoach ? "space-y-4" : "grid md:grid-cols-2 gap-4"}>
             {sessions.map((session: {
               id: string;
               name: string;
@@ -229,12 +261,21 @@ export default async function ProgramPage({ params }: PageProps) {
                 is_deleted: boolean;
               }>;
             }, index: number) => (
-              <SessionCard
-                key={session.id}
-                session={session}
-                index={index}
-                programId={program.id}
-              />
+              isCoach ? (
+                <SessionCard
+                  key={session.id}
+                  session={session}
+                  index={index}
+                  programId={program.id}
+                />
+              ) : (
+                <AthleteSessionCard
+                  key={session.id}
+                  session={session}
+                  index={index}
+                  recentLogs={sessionLogsMap[session.id] || []}
+                />
+              )
             ))}
           </div>
         )}
