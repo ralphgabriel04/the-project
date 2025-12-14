@@ -58,7 +58,7 @@ export function AddExerciseButton({ sessionId }: AddExerciseButtonProps) {
         size="md"
       >
         <form onSubmit={handleSubmit}>
-          <ModalContent className="space-y-3">
+          <ModalContent className="space-y-4">
             <Input
               label="Nom de l'exercice"
               name="name"
@@ -67,45 +67,47 @@ export function AddExerciseButton({ sessionId }: AddExerciseButtonProps) {
               autoFocus
             />
 
-            <div className="grid grid-cols-3 gap-2">
+            <Textarea
+              label="Notes / Instructions"
+              name="notes"
+              placeholder="Instructions spécifiques pour cet exercice..."
+              rows={3}
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <Input
                 label="Séries"
                 name="sets"
                 type="number"
                 min={1}
-                placeholder="4"
+                placeholder="Ex: 4"
               />
               <Input
-                label="Reps"
+                label="Répétitions"
                 name="reps"
-                placeholder="8-12"
+                placeholder="Ex: 8-12"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
               <Input
-                label="Repos (s)"
+                label="Repos (secondes)"
                 name="rest_seconds"
                 type="number"
                 min={0}
-                placeholder="90"
+                placeholder="Ex: 90"
               />
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                label="Tempo (optionnel)"
-                name="tempo"
-                placeholder="3-1-2-0"
-              />
-              <div className="text-xs text-slate-500 self-end pb-2">
-                Exc-Pause-Conc-Pause
+              <div>
+                <Input
+                  label="Tempo"
+                  name="tempo"
+                  placeholder="Ex: 3-1-2-0"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Excentrique-Pause-Concentrique-Pause
+                </p>
               </div>
             </div>
-
-            <Textarea
-              label="Notes (optionnel)"
-              name="notes"
-              placeholder="Instructions..."
-              rows={2}
-            />
           </ModalContent>
 
           <ModalFooter>
@@ -117,7 +119,7 @@ export function AddExerciseButton({ sessionId }: AddExerciseButtonProps) {
               Annuler
             </Button>
             <Button type="submit" isLoading={isLoading}>
-              Ajouter
+              Créer l&apos;exercice
             </Button>
           </ModalFooter>
         </form>
