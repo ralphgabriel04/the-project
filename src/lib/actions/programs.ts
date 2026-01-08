@@ -170,16 +170,18 @@ export async function deleteProgram(programId: string): Promise<ActionResult> {
     return { success: false, error: "Non authentifié" };
   }
 
-  // Delete by created_by OR coach_id to support both coaches and athletes
-  const { error } = await supabase
-    .from("programs")
-    .update({ is_deleted: true })
-    .eq("id", programId)
-    .or(`coach_id.eq.${user.id},created_by.eq.${user.id}`);
+  // Use RPC function to bypass RLS issues
+  const { data: success, error } = await supabase.rpc("soft_delete_program", {
+    program_uuid: programId,
+  });
 
   if (error) {
     console.error("Delete program error:", error);
     return { success: false, error: `Erreur: ${error.message}` };
+  }
+
+  if (!success) {
+    return { success: false, error: "Vous n'êtes pas autorisé à supprimer ce programme" };
   }
 
   revalidatePath("/dashboard/programs");
