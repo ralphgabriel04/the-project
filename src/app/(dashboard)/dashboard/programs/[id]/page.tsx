@@ -47,6 +47,7 @@ export default async function ProgramPage({ params }: PageProps) {
     .single();
 
   const isCoach = profile?.role === "coach";
+  const isAthlete = profile?.role === "athlete";
 
   // Get program with sessions and exercises
   // For coaches: filter by coach_id
@@ -77,6 +78,14 @@ export default async function ProgramPage({ params }: PageProps) {
   if (error || !program) {
     notFound();
   }
+
+  // Check if athlete owns this program (created it themselves)
+  const isOwner = isCoach
+    ? program.coach_id === user.id
+    : program.created_by === user.id;
+
+  // Can manage = coach who owns OR athlete who created
+  const canManageProgram = isOwner;
 
   // Sort sessions by order_index
   const sessions = (program.sessions || [])
@@ -177,20 +186,23 @@ export default async function ProgramPage({ params }: PageProps) {
           </div>
         </div>
 
-        {isCoach && (
+        {canManageProgram && (
           <ProgramActions programId={program.id} programName={program.name} />
         )}
       </div>
 
-      {/* Quick actions - Coach only */}
-      {isCoach && (
+      {/* Quick actions - for program owners */}
+      {canManageProgram && (
         <div className="flex flex-wrap gap-3">
           <AddSessionButton programId={program.id} />
-          <AssignProgramButton
-            programId={program.id}
-            athletes={availableAthletes}
-            assignedAthleteIds={assignedAthleteIds}
-          />
+          {/* Only coaches can assign athletes */}
+          {isCoach && (
+            <AssignProgramButton
+              programId={program.id}
+              athletes={availableAthletes}
+              assignedAthleteIds={assignedAthleteIds}
+            />
+          )}
         </div>
       )}
 
@@ -237,7 +249,7 @@ export default async function ProgramPage({ params }: PageProps) {
               <EmptyState
                 icon="📋"
                 title="Aucune séance"
-                description={isCoach 
+                description={canManageProgram
                   ? "Ajoutez votre première séance à ce programme."
                   : "Ce programme n'a pas encore de séances."
                 }
@@ -245,7 +257,7 @@ export default async function ProgramPage({ params }: PageProps) {
             </CardContent>
           </Card>
         ) : (
-          <div className={isCoach ? "space-y-4" : "grid md:grid-cols-2 gap-4"}>
+          <div className={canManageProgram ? "space-y-4" : "grid md:grid-cols-2 gap-4"}>
             {sessions.map((session: {
               id: string;
               name: string;
@@ -261,7 +273,7 @@ export default async function ProgramPage({ params }: PageProps) {
                 is_deleted: boolean;
               }>;
             }, index: number) => (
-              isCoach ? (
+              canManageProgram ? (
                 <SessionCard
                   key={session.id}
                   session={session}

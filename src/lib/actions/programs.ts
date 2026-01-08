@@ -75,7 +75,22 @@ export async function createProgram(
 
   if (error) {
     console.error("Program creation error:", error);
-    return { success: false, error: "Erreur lors de la création du programme" };
+    // Provide more specific error messages
+    if (error.message?.includes("created_by") || error.code === "42703") {
+      return {
+        success: false,
+        error: "La migration 007 n'est pas appliquée. Contactez l'administrateur."
+      };
+    }
+    if (error.code === "42501" || error.message?.includes("policy")) {
+      return {
+        success: false,
+        error: isCoach
+          ? "Vous n'avez pas les permissions pour créer un programme"
+          : "Les athlètes doivent avoir la migration 007 pour créer des programmes"
+      };
+    }
+    return { success: false, error: `Erreur: ${error.message}` };
   }
 
   // For athletes, auto-assign themselves to their own program
