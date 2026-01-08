@@ -47,7 +47,8 @@ export default async function TrainingSessionPage({ params }: PageProps) {
       program:programs!inner(
         id,
         name,
-        coach_id
+        coach_id,
+        created_by
       ),
       exercises(*)
     `)
@@ -68,8 +69,11 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     .eq("is_deleted", false)
     .single();
 
-  // If not assigned and not the coach, deny access
-  if (!assignment && session.program.coach_id !== user.id) {
+  // Check if user is the creator of the program (athlete-created programs)
+  const isCreator = session.program.created_by === user.id;
+
+  // If not assigned, not the coach, and not the creator, deny access
+  if (!assignment && session.program.coach_id !== user.id && !isCreator) {
     notFound();
   }
 
