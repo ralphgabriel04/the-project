@@ -233,6 +233,129 @@ export async function getSessionLogs(sessionId: string) {
 }
 
 /**
+ * Pause a training session
+ */
+export async function pauseSession(
+  sessionLogId: string,
+): Promise<TrainingActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Non authentifié" };
+  }
+
+  // Get current session log to verify it's not already paused or completed
+  const { data: sessionLog } = await supabase
+    .from("session_logs")
+    .select("paused_at, completed_at")
+    .eq("id", sessionLogId)
+    .eq("athlete_id", user.id)
+    .single();
+
+  if (!sessionLog) {
+    return { success: false, error: "Séance non trouvée" };
+  }
+
+  if (sessionLog.completed_at) {
+    return { success: false, error: "Séance déjà terminée" };
+  }
+
+  if (sessionLog.paused_at) {
+    return { success: false, error: "Séance déjà en pause" };
+  }
+
+  const { error } = await supabase
+    .from("session_logs")
+    .update({
+      paused_at: new Date().toISOString(),
+    })
+    .eq("id", sessionLogId)
+    .eq("athlete_id", user.id);
+
+  if (error) {
+    console.error("Pause session error:", error);
+    return { success: false, error: "Erreur lors de la mise en pause" };
+  }
+
+  revalidatePath("/dashboard/training", "layout");
+  revalidatePath("/dashboard/workout");
+
+  return {
+    success: true,
+    message: "Séance mise en pause",
+  };
+}
+
+/**
+ * Resume a paused training session
+ */
+export async function resumeSession(
+  sessionLogId: string,
+): Promise<TrainingActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Non authentifié" };
+  }
+
+  // Get current session log
+  const { data: sessionLog } = await supabase
+    .from("session_logs")
+    .select("paused_at, total_paused_seconds, completed_at")
+    .eq("id", sessionLogId)
+    .eq("athlete_id", user.id)
+    .single();
+
+  if (!sessionLog) {
+    return { success: false, error: "Séance non trouvée" };
+  }
+
+  if (sessionLog.completed_at) {
+    return { success: false, error: "Séance déjà terminée" };
+  }
+
+  if (!sessionLog.paused_at) {
+    return { success: false, error: "Séance n'est pas en pause" };
+  }
+
+  // Calculate time spent paused
+  const pausedAt = new Date(sessionLog.paused_at).getTime();
+  const now = Date.now();
+  const pausedSeconds = Math.floor((now - pausedAt) / 1000);
+  const newTotalPaused = (sessionLog.total_paused_seconds || 0) + pausedSeconds;
+
+  const { error } = await supabase
+    .from("session_logs")
+    .update({
+      paused_at: null,
+      total_paused_seconds: newTotalPaused,
+    })
+    .eq("id", sessionLogId)
+    .eq("athlete_id", user.id);
+
+  if (error) {
+    console.error("Resume session error:", error);
+    return { success: false, error: "Erreur lors de la reprise" };
+  }
+
+  revalidatePath("/dashboard/training", "layout");
+  revalidatePath("/dashboard/workout");
+
+  return {
+    success: true,
+    message: "Séance reprise",
+  };
+}
+
+/**
  * Upload a session image
  */
 export async function uploadSessionImage(

@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, Badge } from "@/components/ui";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { TrainingExerciseCard } from "@/components/training/exercise-card";
 import { CompleteSessionButton } from "@/components/training/complete-session";
+import { PauseSessionButton } from "@/components/training/pause-session";
 import { ImageUpload } from "@/components/training/image-upload";
 import { SessionTimer } from "@/components/training/session-timer";
 
@@ -139,8 +140,9 @@ export default async function TrainingSessionPage({ params }: PageProps) {
     );
   }
 
-  // Session is completed only if completed_at has a value
+  // Session states
   const isCompleted = !!sessionLog.completed_at;
+  const isPaused = !!sessionLog.paused_at;
 
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
@@ -156,7 +158,9 @@ export default async function TrainingSessionPage({ params }: PageProps) {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-white">{session.name}</h1>
             {isCompleted ? (
-              <Badge variant="success">Terminée ✓</Badge>
+              <Badge variant="success">Terminee</Badge>
+            ) : isPaused ? (
+              <Badge variant="default">En pause</Badge>
             ) : (
               <Badge variant="warning">En cours</Badge>
             )}
@@ -170,14 +174,23 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Timer */}
+      {/* Timer and Pause button */}
       {sessionLog && (
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center gap-4">
           <SessionTimer
             startTime={sessionLog.created_at}
             isCompleted={isCompleted}
             completedAt={sessionLog.completed_at}
+            isPaused={isPaused}
+            pausedAt={sessionLog.paused_at}
+            totalPausedSeconds={sessionLog.total_paused_seconds || 0}
           />
+          {!isCompleted && (
+            <PauseSessionButton
+              sessionLogId={sessionLog.id}
+              isPaused={isPaused}
+            />
+          )}
         </div>
       )}
 
