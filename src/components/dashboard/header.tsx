@@ -34,7 +34,7 @@ export function DashboardHeader({ profile }: HeaderProps) {
 
   return (
     <>
-      <header className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4 sm:px-6 lg:ml-64">
+      <header className="h-16 bg-slate-800 border-b border-slate-700 flex items-center justify-between px-4 sm:px-6">
         {/* Mobile menu button */}
         <button
           type="button"
