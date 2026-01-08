@@ -35,30 +35,20 @@ export default async function CalendarPage() {
   const today = new Date();
   const weekDays = getWeekDays(today);
 
-  // Get all sessions from assigned programs
-  const { data: assignedSessions } = await supabase
-    .from("sessions")
-    .select(`
-      id,
-      name,
-      description,
-      day_of_week,
-      estimated_duration_minutes,
-      program:programs!inner(id, name)
-    `)
-    .eq("is_deleted", false)
-    .in("program_id",
-      supabase
-        .from("program_assignments")
-        .select("program_id")
-        .eq("athlete_id", user.id)
-        .eq("is_deleted", false)
-    );
+  // Get assigned programs first
+  const { data: assignments } = await supabase
+    .from("program_assignments")
+    .select("program_id")
+    .eq("athlete_id", user.id)
+    .eq("is_deleted", false);
 
-  // Try to get sessions from own programs (athlete created) - requires migration 007
-  let ownSessions: typeof assignedSessions = [];
-  try {
-    const { data, error } = await supabase
+  const assignedProgramIds = assignments?.map((a) => a.program_id) || [];
+
+  // Get all sessions from assigned programs
+  let assignedSessions: SessionData[] = [];
+
+  if (assignedProgramIds.length > 0) {
+    const { data } = await supabase
       .from("sessions")
       .select(`
         id,
@@ -69,15 +59,30 @@ export default async function CalendarPage() {
         program:programs!inner(id, name)
       `)
       .eq("is_deleted", false)
-      .eq("programs.created_by", user.id)
-      .is("programs.coach_id", null);
+      .in("program_id", assignedProgramIds);
 
-    if (!error) {
-      ownSessions = data;
-    }
-  } catch {
-    // created_by column doesn't exist yet - migration not run
-    ownSessions = [];
+    assignedSessions = (data || []) as SessionData[];
+  }
+
+  // Try to get sessions from own programs (athlete created) - requires migration 007
+  let ownSessions: SessionData[] = [];
+  const { data: ownData, error: ownError } = await supabase
+    .from("sessions")
+    .select(`
+      id,
+      name,
+      description,
+      day_of_week,
+      estimated_duration_minutes,
+      program:programs!inner(id, name)
+    `)
+    .eq("is_deleted", false)
+    .eq("programs.created_by", user.id)
+    .is("programs.coach_id", null);
+
+  // Only use ownSessions if no error (created_by column might not exist)
+  if (!ownError) {
+    ownSessions = (ownData || []) as SessionData[];
   }
 
   const allSessions: SessionData[] = [

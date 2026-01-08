@@ -33,30 +33,27 @@ export default async function WorkoutPage() {
     redirect("/login");
   }
 
-  // Get all sessions from assigned programs
-  const { data: assignedSessions } = await supabase
-    .from("sessions")
-    .select(`
-      id,
-      name,
-      description,
-      estimated_duration_minutes,
-      day_of_week,
-      program:programs!inner(id, name, coach_id)
-    `)
-    .eq("is_deleted", false)
-    .in("program_id",
-      supabase
-        .from("program_assignments")
-        .select("program_id")
-        .eq("athlete_id", user.id)
-        .eq("is_deleted", false)
-    );
+  // Get assigned programs first
+  const { data: assignments } = await supabase
+    .from("program_assignments")
+    .select("program_id")
+    .eq("athlete_id", user.id)
+    .eq("is_deleted", false);
 
-  // Try to get sessions from own programs (athlete created) - requires migration 007
-  let ownSessions: typeof assignedSessions = [];
-  try {
-    const { data, error } = await supabase
+  const assignedProgramIds = assignments?.map((a) => a.program_id) || [];
+
+  // Get all sessions from assigned programs
+  let assignedSessions: {
+    id: string;
+    name: string;
+    description: string | null;
+    estimated_duration_minutes: number | null;
+    day_of_week: number | null;
+    program: { id: string; name: string; coach_id: string | null };
+  }[] = [];
+
+  if (assignedProgramIds.length > 0) {
+    const { data } = await supabase
       .from("sessions")
       .select(`
         id,
@@ -67,15 +64,30 @@ export default async function WorkoutPage() {
         program:programs!inner(id, name, coach_id)
       `)
       .eq("is_deleted", false)
-      .eq("programs.created_by", user.id)
-      .is("programs.coach_id", null);
+      .in("program_id", assignedProgramIds);
 
-    if (!error) {
-      ownSessions = data;
-    }
-  } catch {
-    // created_by column doesn't exist yet
-    ownSessions = [];
+    assignedSessions = (data || []) as typeof assignedSessions;
+  }
+
+  // Try to get sessions from own programs (athlete created) - requires migration 007
+  let ownSessions: typeof assignedSessions = [];
+  const { data: ownData, error: ownError } = await supabase
+    .from("sessions")
+    .select(`
+      id,
+      name,
+      description,
+      estimated_duration_minutes,
+      day_of_week,
+      program:programs!inner(id, name, coach_id)
+    `)
+    .eq("is_deleted", false)
+    .eq("programs.created_by", user.id)
+    .is("programs.coach_id", null);
+
+  // Only use ownSessions if no error (created_by column might not exist)
+  if (!ownError) {
+    ownSessions = (ownData || []) as typeof ownSessions;
   }
 
   // Combine sessions (add created_by: null for compatibility)
