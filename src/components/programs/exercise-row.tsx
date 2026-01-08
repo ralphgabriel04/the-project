@@ -6,6 +6,7 @@ import { Button } from "@/components/ui";
 import { useToast } from "@/components/ui";
 import { deleteExercise } from "@/lib/actions/programs";
 import { TrashIcon } from "@heroicons/react/24/outline";
+import { EditExerciseButton } from "./edit-exercise";
 
 interface Exercise {
   id: string;
@@ -13,6 +14,8 @@ interface Exercise {
   sets: number | null;
   reps: string | null;
   rest_seconds: number | null;
+  tempo?: string | null;
+  notes?: string | null;
 }
 
 interface ExerciseRowProps {
@@ -70,6 +73,7 @@ export function ExerciseRow({ exercise, index }: ExerciseRowProps) {
         )}
       </div>
 
+      <EditExerciseButton exercise={exercise} />
       <Button
         variant="ghost"
         size="sm"

@@ -7,6 +7,7 @@ import { useToast } from "@/components/ui";
 import { deleteSession } from "@/lib/actions/programs";
 import { AddExerciseButton } from "./add-exercise";
 import { ExerciseRow } from "./exercise-row";
+import { EditSessionButton } from "./edit-session";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -95,6 +96,7 @@ export function SessionCard({ session, index }: SessionCardProps) {
           </div>
 
           <div className="flex items-center gap-2">
+            <EditSessionButton session={session} />
             <Button
               variant="ghost"
               size="sm"
