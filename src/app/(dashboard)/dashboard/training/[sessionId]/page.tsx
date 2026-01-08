@@ -148,16 +148,16 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-2xl font-bold text-white">{session.name}</h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-bold text-white">{session.name}</h1>
             {isCompleted ? (
               <Badge variant="success">Terminée ✓</Badge>
             ) : (
               <Badge variant="warning">En cours</Badge>
             )}
           </div>
-          <p className="text-slate-400 mt-1">
+          <p className="text-sm sm:text-base text-slate-400 mt-1 truncate">
             Programme : {session.program.name}
           </p>
           {session.description && (
@@ -179,8 +179,8 @@ export default async function TrainingSessionPage({ params }: PageProps) {
 
       {/* Session info */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-6 text-sm text-slate-400 flex-wrap">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center gap-3 sm:gap-6 text-xs sm:text-sm text-slate-400 flex-wrap">
             <span>📋 {exercises.length} exercices</span>
             {session.estimated_duration_minutes && (
               <span>⏱️ ~{session.estimated_duration_minutes} min</span>

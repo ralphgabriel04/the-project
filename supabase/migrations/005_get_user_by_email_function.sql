@@ -17,3 +17,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Grant execute permission to authenticated users
 GRANT EXECUTE ON FUNCTION get_user_id_by_email TO authenticated;
 
+
+
+
+
+
+
+

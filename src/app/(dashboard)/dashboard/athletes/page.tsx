@@ -52,8 +52,8 @@ export default async function AthletesPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">Mes Athlètes</h1>
-          <p className="text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold text-white">Mes Athlètes</h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-1">
             Gérez vos athlètes et leurs programmes
           </p>
         </div>
@@ -149,10 +149,10 @@ function AthleteRow({
   status,
   relationshipId,
 }: {
-  athlete: { 
+  athlete: {
     id?: string;
-    first_name?: string | null; 
-    last_name?: string | null; 
+    first_name?: string | null;
+    last_name?: string | null;
     avatar_url?: string | null;
   } | null;
   status: string;
@@ -161,21 +161,21 @@ function AthleteRow({
   const firstName = athlete?.first_name || "Athlète";
   const lastName = athlete?.last_name || "Inconnu";
   const initials = `${firstName[0] || "?"}${lastName[0] || "?"}`;
-  
+
   return (
-    <div className="flex items-center justify-between py-4">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold">
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 gap-3">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold flex-shrink-0">
           {initials}
         </div>
-        <div>
-          <p className="font-medium text-white">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium text-white truncate">
             {firstName} {lastName}
           </p>
-          <p className="text-sm text-slate-400">Aucun programme actif</p>
+          <p className="text-xs sm:text-sm text-slate-400">Aucun programme actif</p>
         </div>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 ml-13 sm:ml-0">
         <Badge variant={status === "accepted" ? "success" : "warning"}>
           {status === "accepted" ? "Actif" : "En attente"}
         </Badge>

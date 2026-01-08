@@ -43,7 +43,8 @@ export interface CoachAthlete {
 
 export interface Program {
   id: string;
-  coach_id: string;
+  coach_id: string | null; // Nullable for athlete-created programs
+  created_by: string | null; // Creator ID (coach or athlete)
   name: string;
   description: string | null;
   status: ProgramStatus;
@@ -134,19 +135,43 @@ export interface SessionImage {
   is_deleted: boolean;
 }
 
+export interface Conversation {
+  id: string;
+  participant_1: string;
+  participant_2: string;
+  last_message_at: string;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
+export interface Message {
+  id: string;
+  conversation_id: string;
+  sender_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  is_deleted: boolean;
+}
+
 // ============================================
 // INSERT TYPES (for creating new records)
 // ============================================
 
-export type ProfileInsert = Omit<
-  Profile,
-  "created_at" | "updated_at" | "is_deleted"
->;
+export type ProfileInsert = {
+  id: string;
+  role: UserRole;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string | null;
+  bio?: string | null;
+};
 
 export type CoachAthleteInsert = Pick<CoachAthlete, "coach_id" | "athlete_id">;
 
-export type ProgramInsert = Pick<Program, "coach_id" | "name"> &
-  Partial<Pick<Program, "description" | "status" | "duration_weeks">>;
+export type ProgramInsert = Pick<Program, "name"> &
+  Partial<Pick<Program, "coach_id" | "created_by" | "description" | "status" | "duration_weeks">>;
 
 export type ProgramAssignmentInsert = Pick<
   ProgramAssignment,
@@ -204,6 +229,10 @@ export type SessionImageInsert = Pick<
   "session_log_id" | "athlete_id" | "image_url"
 > &
   Partial<Pick<SessionImage, "caption">>;
+
+export type ConversationInsert = Pick<Conversation, "participant_1" | "participant_2">;
+
+export type MessageInsert = Pick<Message, "conversation_id" | "sender_id" | "content">;
 
 // ============================================
 // UPDATE TYPES
@@ -273,6 +302,16 @@ export interface ExerciseLogWithExercise extends ExerciseLog {
   exercise: Exercise;
 }
 
+export interface ConversationWithParticipant extends Conversation {
+  other_participant: Profile;
+  last_message?: Message;
+  unread_count: number;
+}
+
+export interface MessageWithSender extends Message {
+  sender: Profile;
+}
+
 // ============================================
 // SUPABASE DATABASE TYPE (for client)
 // ============================================
@@ -284,53 +323,77 @@ export interface Database {
         Row: Profile;
         Insert: ProfileInsert;
         Update: ProfileUpdate;
+        Relationships: [];
       };
       coach_athletes: {
         Row: CoachAthlete;
         Insert: CoachAthleteInsert;
         Update: Partial<CoachAthlete>;
+        Relationships: [];
       };
       programs: {
         Row: Program;
         Insert: ProgramInsert;
         Update: ProgramUpdate;
+        Relationships: [];
       };
       program_assignments: {
         Row: ProgramAssignment;
         Insert: ProgramAssignmentInsert;
         Update: Partial<ProgramAssignment>;
+        Relationships: [];
       };
       sessions: {
         Row: Session;
         Insert: SessionInsert;
         Update: SessionUpdate;
+        Relationships: [];
       };
       exercises: {
         Row: Exercise;
         Insert: ExerciseInsert;
         Update: ExerciseUpdate;
+        Relationships: [];
       };
       session_logs: {
         Row: SessionLog;
         Insert: SessionLogInsert;
         Update: Partial<SessionLog>;
+        Relationships: [];
       };
       exercise_logs: {
         Row: ExerciseLog;
         Insert: ExerciseLogInsert;
         Update: Partial<ExerciseLog>;
+        Relationships: [];
       };
       session_images: {
         Row: SessionImage;
         Insert: SessionImageInsert;
         Update: Partial<SessionImage>;
+        Relationships: [];
+      };
+      conversations: {
+        Row: Conversation;
+        Insert: ConversationInsert;
+        Update: Partial<Conversation>;
+        Relationships: [];
+      };
+      messages: {
+        Row: Message;
+        Insert: MessageInsert;
+        Update: Partial<Message>;
+        Relationships: [];
       };
     };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Enums: {
       user_role: UserRole;
       invitation_status: InvitationStatus;
       program_status: ProgramStatus;
     };
+    CompositeTypes: Record<string, never>;
   };
 }
 

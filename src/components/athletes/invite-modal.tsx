@@ -82,3 +82,10 @@ export function InviteAthleteModal({ isOpen, onClose }: InviteModalProps) {
   );
 }
 
+
+
+
+
+
+
+

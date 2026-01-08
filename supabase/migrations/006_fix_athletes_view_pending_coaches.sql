@@ -19,3 +19,10 @@ CREATE POLICY "Athletes can view their coaches profiles"
     )
   );
 
+
+
+
+
+
+
+

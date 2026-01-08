@@ -49,3 +49,5 @@ next-env.d.ts
 # Cursor
 .cursor/rules/*
 !.cursor/rules/.gitkeep
+
+.vercel

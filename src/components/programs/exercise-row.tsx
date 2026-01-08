@@ -83,3 +83,10 @@ export function ExerciseRow({ exercise, index }: ExerciseRowProps) {
   );
 }
 
+
+
+
+
+
+
+

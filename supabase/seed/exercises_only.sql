@@ -166,3 +166,10 @@ INSERT INTO exercise_library (name_fr, name_en, muscle_group, secondary_muscles,
 
 ON CONFLICT DO NOTHING;
 
+
+
+
+
+
+
+

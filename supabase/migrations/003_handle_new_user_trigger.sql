@@ -43,3 +43,10 @@ WHERE NOT EXISTS (
   SELECT 1 FROM public.profiles p WHERE p.id = au.id
 );
 
+
+
+
+
+
+
+

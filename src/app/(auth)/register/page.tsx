@@ -79,7 +79,8 @@ export default function RegisterPage() {
       }
 
       // Create profile
-      const { error: profileError } = await supabase.from("profiles").insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error: profileError } = await (supabase.from("profiles") as any).insert({
         id: authData.user.id,
         role: role,
         first_name: formData.firstName,

@@ -13,6 +13,7 @@ export interface ActionResult {
 
 /**
  * Create a new program
+ * Works for both coaches and athletes
  */
 export async function createProgram(
   formData: FormData,
@@ -27,6 +28,15 @@ export async function createProgram(
     return { success: false, error: "Non authentifié" };
   }
 
+  // Get user role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isCoach = profile?.role === "coach";
+
   const name = formData.get("name") as string;
   const description = formData.get("description") as string;
   const durationWeeks = formData.get("duration_weeks") as string;
@@ -36,23 +46,44 @@ export async function createProgram(
     return { success: false, error: "Le nom du programme est requis" };
   }
 
-  const programData: ProgramInsert = {
-    coach_id: user.id,
+  // Build base program data
+  const baseProgramData = {
+    coach_id: isCoach ? user.id : null,
     name: name.trim(),
     description: description?.trim() || null,
     duration_weeks: durationWeeks ? parseInt(durationWeeks, 10) : null,
     status: status as "draft" | "active" | "archived",
   };
 
-  const { data, error } = await supabase
+  // Try to insert with created_by first (requires migration 007)
+  let result = await supabase
     .from("programs")
-    .insert(programData)
+    .insert({ ...baseProgramData, created_by: user.id } as ProgramInsert)
     .select("id")
     .single();
+
+  // If created_by column doesn't exist, try without it
+  if (result.error?.message?.includes("created_by")) {
+    result = await supabase
+      .from("programs")
+      .insert(baseProgramData as ProgramInsert)
+      .select("id")
+      .single();
+  }
+
+  const { data, error } = result;
 
   if (error) {
     console.error("Program creation error:", error);
     return { success: false, error: "Erreur lors de la création du programme" };
+  }
+
+  // For athletes, auto-assign themselves to their own program
+  if (!isCoach && data) {
+    await supabase.from("program_assignments").insert({
+      program_id: data.id,
+      athlete_id: user.id,
+    });
   }
 
   revalidatePath("/dashboard/programs");
@@ -66,6 +97,7 @@ export async function createProgram(
 
 /**
  * Update an existing program
+ * Works for both coaches and athletes (via created_by)
  */
 export async function updateProgram(
   programId: string,
@@ -86,6 +118,7 @@ export async function updateProgram(
   const durationWeeks = formData.get("duration_weeks") as string;
   const status = formData.get("status") as string;
 
+  // Update by created_by OR coach_id to support both coaches and athletes
   const { error } = await supabase
     .from("programs")
     .update({
@@ -95,7 +128,7 @@ export async function updateProgram(
       status: status as "draft" | "active" | "archived",
     })
     .eq("id", programId)
-    .eq("coach_id", user.id);
+    .or(`coach_id.eq.${user.id},created_by.eq.${user.id}`);
 
   if (error) {
     return { success: false, error: "Erreur lors de la mise à jour" };
@@ -109,6 +142,7 @@ export async function updateProgram(
 
 /**
  * Delete a program (soft delete)
+ * Works for both coaches and athletes (via created_by)
  */
 export async function deleteProgram(programId: string): Promise<ActionResult> {
   const supabase = await createClient();
@@ -121,11 +155,12 @@ export async function deleteProgram(programId: string): Promise<ActionResult> {
     return { success: false, error: "Non authentifié" };
   }
 
+  // Delete by created_by OR coach_id to support both coaches and athletes
   const { error } = await supabase
     .from("programs")
     .update({ is_deleted: true })
     .eq("id", programId)
-    .eq("coach_id", user.id);
+    .or(`coach_id.eq.${user.id},created_by.eq.${user.id}`);
 
   if (error) {
     console.error("Delete program error:", error);
@@ -139,6 +174,7 @@ export async function deleteProgram(programId: string): Promise<ActionResult> {
 
 /**
  * Duplicate a program with all its sessions and exercises
+ * Works for both coaches and athletes
  */
 export async function duplicateProgram(
   programId: string,
@@ -153,12 +189,21 @@ export async function duplicateProgram(
     return { success: false, error: "Non authentifié" };
   }
 
-  // Get original program
+  // Get user role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  const isCoach = profile?.role === "coach";
+
+  // Get original program (owned by user via coach_id or created_by)
   const { data: program } = await supabase
     .from("programs")
     .select("*")
     .eq("id", programId)
-    .eq("coach_id", user.id)
+    .or(`coach_id.eq.${user.id},created_by.eq.${user.id}`)
     .single();
 
   if (!program) {
@@ -169,7 +214,8 @@ export async function duplicateProgram(
   const { data: newProgram, error: programError } = await supabase
     .from("programs")
     .insert({
-      coach_id: user.id,
+      coach_id: isCoach ? user.id : null,
+      created_by: user.id,
       name: `${program.name} (copie)`,
       description: program.description,
       duration_weeks: program.duration_weeks,
@@ -236,6 +282,7 @@ export async function duplicateProgram(
 
 /**
  * Create a session in a program
+ * Works for both coaches and athletes
  */
 export async function createSession(
   programId: string,
@@ -251,12 +298,12 @@ export async function createSession(
     return { success: false, error: "Non authentifié" };
   }
 
-  // Verify program belongs to user
+  // Verify program belongs to user (via coach_id or created_by)
   const { data: program } = await supabase
     .from("programs")
     .select("id")
     .eq("id", programId)
-    .eq("coach_id", user.id)
+    .or(`coach_id.eq.${user.id},created_by.eq.${user.id}`)
     .single();
 
   if (!program) {

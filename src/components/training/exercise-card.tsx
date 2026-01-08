@@ -90,25 +90,25 @@ export function TrainingExerciseCard({
   return (
     <Card className={completedSets >= targetSets ? "border-emerald-500/30" : ""}>
       <CardHeader>
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 bg-slate-700 px-2 py-0.5 rounded">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-slate-500 bg-slate-700 px-2 py-0.5 rounded flex-shrink-0">
                 {index + 1}
               </span>
-              <h3 className="font-semibold text-white">{exercise.name}</h3>
+              <h3 className="font-semibold text-white text-sm sm:text-base">{exercise.name}</h3>
               {completedSets >= targetSets && (
-                <CheckIcon className="h-5 w-5 text-emerald-400" />
+                <CheckIcon className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-400 flex-shrink-0" />
               )}
             </div>
-            <div className="flex items-center gap-4 mt-2 text-sm text-slate-400">
+            <div className="flex items-center gap-2 sm:gap-4 mt-2 text-xs sm:text-sm text-slate-400 flex-wrap">
               {exercise.sets && <span>{exercise.sets} séries</span>}
-              {exercise.reps && <span>× {exercise.reps} reps</span>}
-              {exercise.rest_seconds && <span>⏱️ {exercise.rest_seconds}s repos</span>}
+              {exercise.reps && <span>× {exercise.reps}</span>}
+              {exercise.rest_seconds && <span>⏱️ {exercise.rest_seconds}s</span>}
             </div>
           </div>
-          <div className="text-right">
-            <span className="text-lg font-bold text-emerald-400">
+          <div className="text-right flex-shrink-0">
+            <span className="text-base sm:text-lg font-bold text-emerald-400">
               {completedSets}/{targetSets}
             </span>
             <p className="text-xs text-slate-500">séries</p>
@@ -129,8 +129,8 @@ export function TrainingExerciseCard({
             <p className="text-xs text-slate-500 uppercase tracking-wide">
               Séries effectuées
             </p>
-            <div className="grid grid-cols-4 gap-2 text-xs text-slate-400 px-2">
-              <span>Série</span>
+            <div className="grid grid-cols-4 gap-1 sm:gap-2 text-xs text-slate-400 px-1 sm:px-2">
+              <span>#</span>
               <span>Poids</span>
               <span>Reps</span>
               <span>RPE</span>
@@ -138,11 +138,11 @@ export function TrainingExerciseCard({
             {sets.map((set) => (
               <div
                 key={set.id}
-                className="grid grid-cols-4 gap-2 p-2 bg-slate-700/50 rounded-lg text-sm"
+                className="grid grid-cols-4 gap-1 sm:gap-2 p-1.5 sm:p-2 bg-slate-700/50 rounded-lg text-xs sm:text-sm"
               >
-                <span className="text-slate-400">#{set.set_number}</span>
+                <span className="text-slate-400">{set.set_number}</span>
                 <span className="text-white font-medium">
-                  {set.weight_kg ? `${set.weight_kg}kg` : "-"}
+                  {set.weight_kg ? `${set.weight_kg}` : "-"}
                 </span>
                 <span className="text-white font-medium">
                   {set.reps_completed ?? "-"}
@@ -161,15 +161,15 @@ export function TrainingExerciseCard({
             <p className="text-xs text-slate-500 uppercase tracking-wide">
               Ajouter une série
             </p>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
               <div>
-                <label className="text-xs text-slate-500">Poids (kg)</label>
+                <label className="text-xs text-slate-500">Poids</label>
                 <Input
                   type="number"
                   step="0.5"
                   value={newSet.weight}
                   onChange={(e) => setNewSet({ ...newSet, weight: e.target.value })}
-                  placeholder="0"
+                  placeholder="kg"
                   className="mt-1"
                 />
               </div>
@@ -184,7 +184,7 @@ export function TrainingExerciseCard({
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500">RPE (1-10)</label>
+                <label className="text-xs text-slate-500">RPE</label>
                 <Input
                   type="number"
                   min="1"
@@ -205,8 +205,8 @@ export function TrainingExerciseCard({
               className="w-full"
               variant={completedSets >= targetSets ? "secondary" : "default"}
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
-              {isAddingSet ? "Enregistrement..." : `Ajouter série ${completedSets + 1}`}
+              <PlusIcon className="h-4 w-4 mr-1 sm:mr-2" />
+              {isAddingSet ? "..." : `Série ${completedSets + 1}`}
             </Button>
           </div>
         )}

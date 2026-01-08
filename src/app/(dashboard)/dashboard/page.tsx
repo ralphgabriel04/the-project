@@ -29,18 +29,18 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       {/* Welcome section */}
       <div>
-        <h1 className="text-2xl font-bold text-white">
+        <h1 className="text-xl sm:text-2xl font-bold text-white">
           Bonjour, {profile.first_name} ! 👋
         </h1>
-        <p className="text-slate-400 mt-1">
+        <p className="text-sm sm:text-base text-slate-400 mt-1">
           {isCoach
             ? "Gérez vos athlètes et leurs programmes d'entraînement"
-            : "Consultez vos programmes et enregistrez vos performances"}
+            : "Créez vos programmes, entraînez-vous et suivez votre progression"}
         </p>
       </div>
 
       {/* Quick stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {isCoach ? (
           <>
             <StatCard
@@ -99,11 +99,11 @@ export default async function DashboardPage() {
       </div>
 
       {/* Main content */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
         {/* Upcoming sessions / Recent activity */}
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-base sm:text-lg font-semibold text-white">
               {isCoach ? "Activité récente" : "Prochaines séances"}
             </h2>
           </CardHeader>
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
               <p className="text-sm text-slate-500 mt-1">
                 {isCoach
                   ? "Commencez par inviter des athlètes"
-                  : "Attendez qu'un coach vous assigne un programme"}
+                  : "Créez un programme ou attendez que votre coach vous en assigne un"}
               </p>
             </div>
           </CardContent>
@@ -127,7 +127,7 @@ export default async function DashboardPage() {
         {/* Quick actions */}
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-base sm:text-lg font-semibold text-white">
               Actions rapides
             </h2>
           </CardHeader>
@@ -197,14 +197,14 @@ function StatCard({
 }) {
   return (
     <Card>
-      <CardContent className="p-5">
+      <CardContent className="p-3 sm:p-5">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-sm text-slate-400">{title}</p>
-            <p className="text-2xl font-bold text-white mt-1">{value}</p>
-            <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>
+            <p className="text-xs sm:text-sm text-slate-400">{title}</p>
+            <p className="text-xl sm:text-2xl font-bold text-white mt-1">{value}</p>
+            <p className="text-xs text-slate-500 mt-0.5 hidden sm:block">{subtitle}</p>
           </div>
-          <span className="text-2xl">{icon}</span>
+          <span className="text-xl sm:text-2xl">{icon}</span>
         </div>
       </CardContent>
     </Card>
@@ -225,14 +225,14 @@ function QuickAction({
   return (
     <a
       href={href}
-      className="flex items-center gap-4 p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors group"
+      className="flex items-center gap-3 sm:gap-4 p-2.5 sm:p-3 rounded-lg bg-slate-700/50 hover:bg-slate-700 transition-colors group"
     >
-      <span className="text-2xl">{icon}</span>
-      <div className="flex-1">
-        <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors">
+      <span className="text-xl sm:text-2xl">{icon}</span>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium text-white group-hover:text-emerald-400 transition-colors truncate">
           {title}
         </p>
-        <p className="text-xs text-slate-400">{description}</p>
+        <p className="text-xs text-slate-400 truncate hidden sm:block">{description}</p>
       </div>
       <span className="text-slate-500 group-hover:text-emerald-400 transition-colors">
         →

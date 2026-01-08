@@ -80,3 +80,10 @@ CREATE POLICY "Coaches can update assignments"
     is_program_coach(program_id, auth.uid())
   );
 
+
+
+
+
+
+
+

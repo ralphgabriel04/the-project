@@ -30,7 +30,7 @@ export function CardHeader({
   ...props
 }: CardHeaderProps) {
   return (
-    <div className={`px-6 py-5 border-b border-slate-700 ${className}`} {...props}>
+    <div className={`px-4 py-4 sm:px-6 sm:py-5 border-b border-slate-700 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -46,7 +46,7 @@ export function CardContent({
   ...props
 }: CardContentProps) {
   return (
-    <div className={`px-6 py-5 ${className}`} {...props}>
+    <div className={`px-4 py-4 sm:px-6 sm:py-5 ${className}`} {...props}>
       {children}
     </div>
   );
@@ -63,7 +63,7 @@ export function CardFooter({
 }: CardFooterProps) {
   return (
     <div
-      className={`px-6 py-4 border-t border-slate-700 ${className}`}
+      className={`px-4 py-3 sm:px-6 sm:py-4 border-t border-slate-700 ${className}`}
       {...props}
     >
       {children}

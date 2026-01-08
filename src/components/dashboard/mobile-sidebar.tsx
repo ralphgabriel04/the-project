@@ -11,6 +11,9 @@ import {
   ClipboardDocumentListIcon,
   CalendarIcon,
   Cog6ToothIcon,
+  ChatBubbleLeftRightIcon,
+  ChartBarIcon,
+  PlayIcon,
 } from "@heroicons/react/24/outline";
 
 interface MobileSidebarProps {
@@ -34,6 +37,12 @@ const navigation: NavItem[] = [
     roles: ["coach", "athlete"],
   },
   {
+    name: "Commencer",
+    href: "/dashboard/workout",
+    icon: PlayIcon,
+    roles: ["athlete"],
+  },
+  {
     name: "Mes Athlètes",
     href: "/dashboard/athletes",
     icon: UserGroupIcon,
@@ -55,6 +64,18 @@ const navigation: NavItem[] = [
     name: "Calendrier",
     href: "/dashboard/calendar",
     icon: CalendarIcon,
+    roles: ["coach", "athlete"],
+  },
+  {
+    name: "Ma Progression",
+    href: "/dashboard/progress",
+    icon: ChartBarIcon,
+    roles: ["athlete"],
+  },
+  {
+    name: "Messages",
+    href: "/dashboard/messages",
+    icon: ChatBubbleLeftRightIcon,
     roles: ["coach", "athlete"],
   },
   {

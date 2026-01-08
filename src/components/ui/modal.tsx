@@ -12,11 +12,11 @@ interface ModalProps {
 }
 
 const sizeStyles = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-  full: "max-w-4xl",
+  sm: "max-w-[calc(100vw-2rem)] sm:max-w-sm",
+  md: "max-w-[calc(100vw-2rem)] sm:max-w-md",
+  lg: "max-w-[calc(100vw-2rem)] sm:max-w-lg",
+  xl: "max-w-[calc(100vw-2rem)] sm:max-w-xl",
+  full: "max-w-[calc(100vw-2rem)] sm:max-w-4xl",
 };
 
 export function Modal({
@@ -54,10 +54,10 @@ export function Modal({
         >
           {/* Header */}
           {title && (
-            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700 flex-shrink-0">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-slate-700 flex-shrink-0">
               <h2
                 id="modal-title"
-                className="text-lg font-semibold text-white"
+                className="text-base sm:text-lg font-semibold text-white"
               >
                 {title}
               </h2>
@@ -86,7 +86,7 @@ interface ModalContentProps {
 }
 
 export function ModalContent({ children, className = "" }: ModalContentProps) {
-  return <div className={`px-6 py-4 ${className}`}>{children}</div>;
+  return <div className={`px-4 py-3 sm:px-6 sm:py-4 ${className}`}>{children}</div>;
 }
 
 interface ModalFooterProps {
@@ -98,8 +98,8 @@ export function ModalFooter({ children, className = "" }: ModalFooterProps) {
   return (
     <div
       className={`
-        px-6 py-4 border-t border-slate-700
-        flex items-center justify-end gap-3
+        px-4 py-3 sm:px-6 sm:py-4 border-t border-slate-700
+        flex items-center justify-end gap-2 sm:gap-3
         ${className}
       `}
     >
