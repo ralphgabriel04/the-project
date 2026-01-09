@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { getConversation } from "@/lib/actions/messages";
 import { MessageInput } from "@/components/messages/message-input";
+import { MessageTime, MessageDate } from "@/components/messages/message-time";
 
 interface PageProps {
   params: Promise<{ conversationId: string }>;
@@ -88,11 +89,7 @@ export default async function ConversationPage({ params }: PageProps) {
               return (
                 <div key={message.id}>
                   {showDate && (
-                    <div className="flex justify-center my-4">
-                      <span className="text-xs text-slate-500 bg-slate-700/50 px-3 py-1 rounded-full">
-                        {formatDate(message.created_at)}
-                      </span>
-                    </div>
+                    <MessageDate timestamp={message.created_at} />
                   )}
                   <div
                     className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
@@ -106,13 +103,12 @@ export default async function ConversationPage({ params }: PageProps) {
                       `}
                     >
                       <p className="whitespace-pre-wrap break-words">{message.content}</p>
-                      <p
-                        className={`text-xs mt-1 ${
+                      <MessageTime
+                        timestamp={message.created_at}
+                        className={`text-xs mt-1 block ${
                           isOwn ? "text-emerald-200" : "text-slate-400"
                         }`}
-                      >
-                        {formatTime(message.created_at)}
-                      </p>
+                      />
                     </div>
                   </div>
                 </div>
@@ -143,30 +139,4 @@ function isSameDay(date1: Date, date2: Date): boolean {
     date1.getMonth() === date2.getMonth() &&
     date1.getFullYear() === date2.getFullYear()
   );
-}
-
-function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diff = now.getTime() - date.getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-  if (days === 0) {
-    return "Aujourd'hui";
-  }
-  if (days === 1) {
-    return "Hier";
-  }
-  return date.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-}
-
-function formatTime(dateString: string): string {
-  return new Date(dateString).toLocaleTimeString("fr-FR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 }
