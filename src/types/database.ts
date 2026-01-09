@@ -156,6 +156,50 @@ export interface Message {
 }
 
 // ============================================
+// MOTIVATIONAL QUOTES & COACH MESSAGES
+// ============================================
+
+export interface MotivationalQuote {
+  id: string;
+  content: string;
+  author: string | null;
+  category: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface CoachMessage {
+  id: string;
+  coach_id: string;
+  athlete_id: string;
+  content: string;
+  display_date: string;
+  expires_at: string | null;
+  is_read: boolean;
+  created_at: string;
+  is_deleted: boolean;
+}
+
+// ============================================
+// READINESS LOGS
+// ============================================
+
+export interface ReadinessLog {
+  id: string;
+  athlete_id: string;
+  log_date: string;
+  sleep_quality: number | null;
+  energy_level: number | null;
+  muscle_soreness: number | null;
+  stress_level: number | null;
+  overall_score: number | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  is_deleted: boolean;
+}
+
+// ============================================
 // INSERT TYPES (for creating new records)
 // ============================================
 
@@ -233,6 +277,23 @@ export type SessionImageInsert = Pick<
 export type ConversationInsert = Pick<Conversation, "participant_1" | "participant_2">;
 
 export type MessageInsert = Pick<Message, "conversation_id" | "sender_id" | "content">;
+
+export type CoachMessageInsert = Pick<CoachMessage, "coach_id" | "athlete_id" | "content"> &
+  Partial<Pick<CoachMessage, "display_date" | "expires_at">>;
+
+export type ReadinessLogInsert = Pick<ReadinessLog, "athlete_id"> &
+  Partial<
+    Pick<
+      ReadinessLog,
+      | "log_date"
+      | "sleep_quality"
+      | "energy_level"
+      | "muscle_soreness"
+      | "stress_level"
+      | "overall_score"
+      | "notes"
+    >
+  >;
 
 // ============================================
 // UPDATE TYPES
@@ -312,6 +373,10 @@ export interface MessageWithSender extends Message {
   sender: Profile;
 }
 
+export interface CoachMessageWithCoach extends CoachMessage {
+  coach: Pick<Profile, "id" | "first_name" | "last_name" | "avatar_url">;
+}
+
 // ============================================
 // SUPABASE DATABASE TYPE (for client)
 // ============================================
@@ -383,6 +448,24 @@ export interface Database {
         Row: Message;
         Insert: MessageInsert;
         Update: Partial<Message>;
+        Relationships: [];
+      };
+      motivational_quotes: {
+        Row: MotivationalQuote;
+        Insert: Omit<MotivationalQuote, "id" | "created_at">;
+        Update: Partial<Omit<MotivationalQuote, "id" | "created_at">>;
+        Relationships: [];
+      };
+      coach_messages: {
+        Row: CoachMessage;
+        Insert: CoachMessageInsert;
+        Update: Partial<CoachMessage>;
+        Relationships: [];
+      };
+      readiness_logs: {
+        Row: ReadinessLog;
+        Insert: ReadinessLogInsert;
+        Update: Partial<ReadinessLog>;
         Relationships: [];
       };
     };

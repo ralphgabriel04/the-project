@@ -2,7 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, Badge, EmptyState, Avatar } from "@/components/ui";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+import { AthleteMotivationButton } from "@/components/athletes/athlete-motivation-button";
+import { getAthleteReadiness } from "@/lib/actions/readiness";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -86,6 +88,12 @@ export default async function AthletePage({ params }: PageProps) {
   const sessionLogs = recentLogs || [];
   const completedSessions = sessionLogs.filter((log) => log.completed_at !== null).length;
 
+  // Get athlete's today readiness
+  const readinessResult = await getAthleteReadiness(id);
+  const athleteReadiness = readinessResult.data;
+
+  const athleteName = `${athlete?.first_name || "Athlete"} ${athlete?.last_name || ""}`.trim();
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -116,11 +124,39 @@ export default async function AthletePage({ params }: PageProps) {
               </div>
             </div>
           </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2 mt-2 sm:mt-0">
+            <AthleteMotivationButton athleteId={id} athleteName={athleteName} />
+            <Link
+              href={`/dashboard/messages/new?recipient=${id}`}
+              className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg transition-colors"
+            >
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              Message
+            </Link>
+          </div>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Readiness and Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        {/* Readiness Score */}
+        <Card className={athleteReadiness ? "lg:col-span-1" : "lg:col-span-1 opacity-60"}>
+          <CardContent className="p-4">
+            <p className="text-sm text-slate-400">Readiness</p>
+            {athleteReadiness ? (
+              <p className={`text-2xl font-bold ${
+                (athleteReadiness.overall_score || 0) >= 7 ? "text-emerald-400" :
+                (athleteReadiness.overall_score || 0) >= 5 ? "text-yellow-400" :
+                "text-red-400"
+              }`}>
+                {athleteReadiness.overall_score?.toFixed(1) || "?"}/10
+              </p>
+            ) : (
+              <p className="text-lg font-bold text-slate-500">Non renseigne</p>
+            )}
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-slate-400">Programmes</p>
@@ -129,13 +165,13 @@ export default async function AthletePage({ params }: PageProps) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-400">Séances complétées</p>
+            <p className="text-sm text-slate-400">Seances completees</p>
             <p className="text-2xl font-bold text-emerald-400">{completedSessions}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-400">Récentes</p>
+            <p className="text-sm text-slate-400">Recentes</p>
             <p className="text-2xl font-bold text-white">{sessionLogs.length}</p>
           </CardContent>
         </Card>
