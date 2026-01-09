@@ -274,19 +274,31 @@ export async function createOrGetConversation(
     return { success: true, conversationId: existing.id };
   }
 
-  // Verify there's a coach-athlete relationship
+  // Verify there's an accepted coach-athlete relationship
   const { data: relationship } = await supabase
     .from("coach_athletes")
     .select("id")
     .or(`and(coach_id.eq.${user.id},athlete_id.eq.${recipientId}),and(coach_id.eq.${recipientId},athlete_id.eq.${user.id})`)
+    .eq("status", "accepted")
     .eq("is_deleted", false)
     .single();
 
   if (!relationship) {
-    return { success: false, error: "Vous ne pouvez discuter qu'avec votre coach ou vos athlètes" };
+    return { success: false, error: "Vous ne pouvez discuter qu'avec votre coach ou vos athlètes acceptés" };
   }
 
-  // Create conversation
+  // Try using RPC function first (bypasses RLS issues)
+  const { data: rpcData, error: rpcError } = await supabase.rpc("get_or_create_conversation", {
+    user_1: user.id,
+    user_2: recipientId,
+  });
+
+  if (!rpcError && rpcData) {
+    revalidatePath("/dashboard/messages");
+    return { success: true, conversationId: rpcData };
+  }
+
+  // Fallback to direct insert
   const { data, error } = await supabase
     .from("conversations")
     .insert({
@@ -298,6 +310,23 @@ export async function createOrGetConversation(
 
   if (error) {
     console.error("Error creating conversation:", error);
+    // Check for specific errors
+    if (error.code === "42501" || error.message?.includes("policy")) {
+      return { success: false, error: "Permission refusée. Vérifiez que vous avez une relation acceptée avec ce contact." };
+    }
+    if (error.code === "23505") {
+      // Unique violation - conversation already exists, try to find it
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("participant_1", p1)
+        .eq("participant_2", p2)
+        .single();
+
+      if (existingConv) {
+        return { success: true, conversationId: existingConv.id };
+      }
+    }
     return { success: false, error: "Erreur lors de la création de la conversation" };
   }
 
