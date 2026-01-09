@@ -36,30 +36,47 @@ export default async function MessagesPage() {
   // Get potential contacts (coaches for athletes, athletes for coaches)
   let contacts: { id: string; first_name: string; last_name: string }[] = [];
 
-  if (isCoach) {
-    // Get coach's athletes
-    const { data: relationships } = await supabase
-      .from("coach_athletes")
-      .select(`
-        athlete:profiles!coach_athletes_athlete_id_fkey(id, first_name, last_name)
-      `)
-      .eq("coach_id", user.id)
-      .eq("status", "accepted")
-      .eq("is_deleted", false);
+  try {
+    if (isCoach) {
+      // Get coach's athletes - use simpler query without explicit FK reference
+      const { data: relationships } = await supabase
+        .from("coach_athletes")
+        .select("athlete_id")
+        .eq("coach_id", user.id)
+        .eq("status", "accepted")
+        .eq("is_deleted", false);
 
-    contacts = (relationships?.map((r) => r.athlete).filter(Boolean) || []) as typeof contacts;
-  } else {
-    // Get athlete's coaches
-    const { data: relationships } = await supabase
-      .from("coach_athletes")
-      .select(`
-        coach:profiles!coach_athletes_coach_id_fkey(id, first_name, last_name)
-      `)
-      .eq("athlete_id", user.id)
-      .eq("status", "accepted")
-      .eq("is_deleted", false);
+      if (relationships && relationships.length > 0) {
+        const athleteIds = relationships.map((r) => r.athlete_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", athleteIds);
 
-    contacts = (relationships?.map((r) => r.coach).filter(Boolean) || []) as typeof contacts;
+        contacts = (profiles || []) as typeof contacts;
+      }
+    } else {
+      // Get athlete's coaches - use simpler query without explicit FK reference
+      const { data: relationships } = await supabase
+        .from("coach_athletes")
+        .select("coach_id")
+        .eq("athlete_id", user.id)
+        .eq("status", "accepted")
+        .eq("is_deleted", false);
+
+      if (relationships && relationships.length > 0) {
+        const coachIds = relationships.map((r) => r.coach_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, first_name, last_name")
+          .in("id", coachIds);
+
+        contacts = (profiles || []) as typeof contacts;
+      }
+    }
+  } catch (error) {
+    console.error("Error fetching contacts:", error);
+    contacts = [];
   }
 
   // Filter out contacts already in conversations
@@ -90,20 +107,24 @@ export default async function MessagesPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {newContacts.map((contact) => (
-                <Link
-                  key={contact.id}
-                  href={`/dashboard/messages/new?recipient=${contact.id}`}
-                  className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-sm font-bold">
-                    {contact.first_name?.[0]}{contact.last_name?.[0]}
-                  </div>
-                  <span className="text-white">
-                    {contact.first_name} {contact.last_name}
-                  </span>
-                </Link>
-              ))}
+              {newContacts.map((contact) => {
+                const firstName = contact.first_name || "?";
+                const lastName = contact.last_name || "?";
+                return (
+                  <Link
+                    key={contact.id}
+                    href={`/dashboard/messages/new?recipient=${contact.id}`}
+                    className="flex items-center gap-2 px-3 py-2 bg-slate-700 hover:bg-slate-600 rounded-lg transition-colors"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white text-sm font-bold">
+                      {firstName[0]}{lastName[0]}
+                    </div>
+                    <span className="text-white">
+                      {firstName} {lastName}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </CardContent>
         </Card>
