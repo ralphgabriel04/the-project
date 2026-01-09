@@ -36,10 +36,10 @@ export function ReadinessCard({ existingLog }: ReadinessFormProps) {
               <ReadinessGauge score={existingLog.overall_score || 0} />
             </div>
             <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
-              <MetricItem label="Sommeil" value={existingLog.sleep_quality} />
-              <MetricItem label="Energie" value={existingLog.energy_level} />
-              <MetricItem label="Courbatures" value={existingLog.muscle_soreness} inverted />
-              <MetricItem label="Stress" value={existingLog.stress_level} inverted />
+              <MetricItem label="Sommeil" value={existingLog.sleep_quality} icon="moon" />
+              <MetricItem label="Énergie" value={existingLog.energy_level} icon="bolt" />
+              <MetricItem label="Courbatures" value={existingLog.muscle_soreness} icon="muscle" inverted />
+              <MetricItem label="Stress" value={existingLog.stress_level} icon="brain" inverted />
             </div>
           </div>
           {existingLog.notes && (
@@ -61,6 +61,11 @@ export function ReadinessCard({ existingLog }: ReadinessFormProps) {
   return (
     <Card className="border-dashed border-slate-600">
       <CardContent className="p-6 text-center">
+        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
+          <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
         <p className="text-slate-400 mb-4">
           Comment te sens-tu aujourd&apos;hui ?
         </p>
@@ -100,7 +105,7 @@ function ReadinessGauge({ score }: { score: number }) {
   );
 }
 
-function MetricItem({ label, value, inverted = false }: { label: string; value: number | null; inverted?: boolean }) {
+function MetricItem({ label, value, icon, inverted = false }: { label: string; value: number | null; icon: string; inverted?: boolean }) {
   const displayValue = value || 0;
   const getColor = (v: number, inv: boolean) => {
     const effectiveValue = inv ? 11 - v : v;
@@ -111,11 +116,47 @@ function MetricItem({ label, value, inverted = false }: { label: string; value: 
   };
 
   return (
-    <div className="flex justify-between">
-      <span className="text-slate-400">{label}</span>
-      <span className={getColor(displayValue, inverted)}>{displayValue}/10</span>
+    <div className="flex items-center justify-between gap-2">
+      <span className="text-slate-400 flex items-center gap-1">
+        <MetricIcon name={icon} />
+        {label}
+      </span>
+      <span className={`font-medium ${getColor(displayValue, inverted)}`}>{displayValue}/10</span>
     </div>
   );
+}
+
+function MetricIcon({ name }: { name: string }) {
+  const iconClass = "w-4 h-4";
+
+  switch (name) {
+    case "moon":
+      return (
+        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+        </svg>
+      );
+    case "bolt":
+      return (
+        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      );
+    case "muscle":
+      return (
+        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+      );
+    case "brain":
+      return (
+        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+      );
+    default:
+      return null;
+  }
 }
 
 interface ReadinessModalProps {
@@ -153,14 +194,28 @@ function ReadinessModal({ existingLog, onClose }: ReadinessModalProps) {
     setIsSubmitting(false);
   };
 
+  // Calculate preview score
+  const previewScore = calculatePreviewScore(formData);
+
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h2 className="text-lg font-semibold text-white">Check-in Readiness</h2>
+      <div className="bg-slate-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-slate-700">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
+              <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Check-in Readiness</h2>
+              <p className="text-sm text-slate-400">Comment te sens-tu aujourd&apos;hui ?</p>
+            </div>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-slate-700 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
           >
             <XMarkIcon className="h-5 w-5 text-slate-400" />
           </button>
@@ -169,54 +224,83 @@ function ReadinessModal({ existingLog, onClose }: ReadinessModalProps) {
         {success ? (
           <div className="p-8 text-center">
             <CheckCircleIcon className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-            <p className="text-white text-lg">Enregistre !</p>
+            <p className="text-white text-lg">Enregistré !</p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-4 space-y-6">
-            <SliderField
-              label="Qualite du sommeil"
-              description="1 = Tres mauvais, 10 = Excellent"
-              value={formData.sleep_quality}
-              onChange={(v) => setFormData((f) => ({ ...f, sleep_quality: v }))}
-            />
+          <form onSubmit={handleSubmit} className="p-5">
+            {/* Score Preview */}
+            <div className="flex justify-center mb-6">
+              <div className="text-center">
+                <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getScoreBgColor(previewScore)} flex items-center justify-center mx-auto mb-2`}>
+                  <span className={`text-3xl font-bold ${getScoreColor(previewScore)}`}>
+                    {previewScore.toFixed(1)}
+                  </span>
+                </div>
+                <p className="text-sm text-slate-400">Score prévu</p>
+              </div>
+            </div>
 
-            <SliderField
-              label="Niveau d'energie"
-              description="1 = Epuise, 10 = Plein d'energie"
-              value={formData.energy_level}
-              onChange={(v) => setFormData((f) => ({ ...f, energy_level: v }))}
-            />
+            {/* Metrics Grid */}
+            <div className="grid gap-4">
+              <MetricSlider
+                icon="moon"
+                label="Qualité du sommeil"
+                description="Comment as-tu dormi ?"
+                value={formData.sleep_quality}
+                onChange={(v) => setFormData((f) => ({ ...f, sleep_quality: v }))}
+                lowLabel="Très mauvais"
+                highLabel="Excellent"
+              />
 
-            <SliderField
-              label="Courbatures musculaires"
-              description="1 = Aucune, 10 = Tres douloureuses"
-              value={formData.muscle_soreness}
-              onChange={(v) => setFormData((f) => ({ ...f, muscle_soreness: v }))}
-              inverted
-            />
+              <MetricSlider
+                icon="bolt"
+                label="Niveau d'énergie"
+                description="Comment te sens-tu physiquement ?"
+                value={formData.energy_level}
+                onChange={(v) => setFormData((f) => ({ ...f, energy_level: v }))}
+                lowLabel="Épuisé"
+                highLabel="Plein d'énergie"
+              />
 
-            <SliderField
-              label="Niveau de stress"
-              description="1 = Detendu, 10 = Tres stresse"
-              value={formData.stress_level}
-              onChange={(v) => setFormData((f) => ({ ...f, stress_level: v }))}
-              inverted
-            />
+              <MetricSlider
+                icon="muscle"
+                label="Courbatures musculaires"
+                description="As-tu des douleurs musculaires ?"
+                value={formData.muscle_soreness}
+                onChange={(v) => setFormData((f) => ({ ...f, muscle_soreness: v }))}
+                lowLabel="Aucune"
+                highLabel="Très douloureuses"
+                inverted
+              />
 
-            <div>
+              <MetricSlider
+                icon="brain"
+                label="Niveau de stress"
+                description="Comment te sens-tu mentalement ?"
+                value={formData.stress_level}
+                onChange={(v) => setFormData((f) => ({ ...f, stress_level: v }))}
+                lowLabel="Détendu"
+                highLabel="Très stressé"
+                inverted
+              />
+            </div>
+
+            {/* Notes */}
+            <div className="mt-5">
               <label className="block text-sm font-medium text-white mb-2">
                 Notes (optionnel)
               </label>
               <textarea
                 value={formData.notes}
                 onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="Comment te sens-tu aujourd'hui ?"
-                className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                rows={3}
+                placeholder="Ajoute des détails sur ton état du jour..."
+                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                rows={2}
               />
             </div>
 
-            <div className="flex gap-3">
+            {/* Actions */}
+            <div className="flex gap-3 mt-6">
               <Button
                 type="button"
                 variant="secondary"
@@ -240,15 +324,18 @@ function ReadinessModal({ existingLog, onClose }: ReadinessModalProps) {
   );
 }
 
-interface SliderFieldProps {
+interface MetricSliderProps {
+  icon: string;
   label: string;
   description: string;
   value: number;
   onChange: (value: number) => void;
+  lowLabel: string;
+  highLabel: string;
   inverted?: boolean;
 }
 
-function SliderField({ label, description, value, onChange, inverted = false }: SliderFieldProps) {
+function MetricSlider({ icon, label, description, value, onChange, lowLabel, highLabel, inverted = false }: MetricSliderProps) {
   const getColor = (v: number, inv: boolean) => {
     const effectiveValue = inv ? 11 - v : v;
     if (effectiveValue >= 8) return "bg-emerald-500";
@@ -257,27 +344,80 @@ function SliderField({ label, description, value, onChange, inverted = false }: 
     return "bg-red-500";
   };
 
+  const getTextColor = (v: number, inv: boolean) => {
+    const effectiveValue = inv ? 11 - v : v;
+    if (effectiveValue >= 8) return "text-emerald-400";
+    if (effectiveValue >= 6) return "text-yellow-400";
+    if (effectiveValue >= 4) return "text-orange-400";
+    return "text-red-400";
+  };
+
   return (
-    <div>
-      <div className="flex justify-between items-center mb-2">
-        <label className="text-sm font-medium text-white">{label}</label>
-        <span className={`px-2 py-1 rounded text-white text-sm ${getColor(value, inverted)}`}>
+    <div className="bg-slate-700/30 rounded-xl p-4">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
+            <MetricIcon name={icon} />
+          </div>
+          <div>
+            <p className="font-medium text-white">{label}</p>
+            <p className="text-xs text-slate-400">{description}</p>
+          </div>
+        </div>
+        <span className={`px-3 py-1.5 rounded-lg text-white text-sm font-bold ${getColor(value, inverted)}`}>
           {value}/10
         </span>
       </div>
-      <p className="text-xs text-slate-400 mb-2">{description}</p>
-      <input
-        type="range"
-        min="1"
-        max="10"
-        value={value}
-        onChange={(e) => onChange(parseInt(e.target.value))}
-        className="w-full accent-emerald-500"
-      />
-      <div className="flex justify-between text-xs text-slate-500">
-        <span>1</span>
-        <span>10</span>
+
+      <div className="relative">
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={value}
+          onChange={(e) => onChange(parseInt(e.target.value))}
+          className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+          style={{
+            background: `linear-gradient(to right, ${inverted ? '#ef4444' : '#10b981'} 0%, ${inverted ? '#10b981' : '#ef4444'} 100%)`
+          }}
+        />
+        <div className="flex justify-between mt-2">
+          <span className="text-xs text-slate-500">{lowLabel}</span>
+          <span className="text-xs text-slate-500">{highLabel}</span>
+        </div>
       </div>
     </div>
   );
+}
+
+function calculatePreviewScore(data: ReadinessFormData): number {
+  const sleepWeight = 0.3;
+  const energyWeight = 0.3;
+  const sorenessWeight = 0.2;
+  const stressWeight = 0.2;
+
+  const invertedSoreness = 11 - data.muscle_soreness;
+  const invertedStress = 11 - data.stress_level;
+
+  const score =
+    data.sleep_quality * sleepWeight +
+    data.energy_level * energyWeight +
+    invertedSoreness * sorenessWeight +
+    invertedStress * stressWeight;
+
+  return Math.round(score * 100) / 100;
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 8) return "text-emerald-400";
+  if (score >= 6) return "text-yellow-400";
+  if (score >= 4) return "text-orange-400";
+  return "text-red-400";
+}
+
+function getScoreBgColor(score: number): string {
+  if (score >= 8) return "from-emerald-500/20 to-emerald-600/20";
+  if (score >= 6) return "from-yellow-500/20 to-yellow-600/20";
+  if (score >= 4) return "from-orange-500/20 to-orange-600/20";
+  return "from-red-500/20 to-red-600/20";
 }

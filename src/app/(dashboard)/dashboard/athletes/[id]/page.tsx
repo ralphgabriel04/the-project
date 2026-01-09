@@ -153,7 +153,7 @@ export default async function AthletePage({ params }: PageProps) {
                 {athleteReadiness.overall_score?.toFixed(1) || "?"}/10
               </p>
             ) : (
-              <p className="text-lg font-bold text-slate-500">Non renseigne</p>
+              <p className="text-lg font-bold text-slate-500">Non renseigné</p>
             )}
           </CardContent>
         </Card>
@@ -165,7 +165,7 @@ export default async function AthletePage({ params }: PageProps) {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-sm text-slate-400">Seances completees</p>
+            <p className="text-sm text-slate-400">Séances complétées</p>
             <p className="text-2xl font-bold text-emerald-400">{completedSessions}</p>
           </CardContent>
         </Card>

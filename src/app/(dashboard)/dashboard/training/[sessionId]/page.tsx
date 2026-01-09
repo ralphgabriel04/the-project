@@ -158,7 +158,7 @@ export default async function TrainingSessionPage({ params }: PageProps) {
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-white">{session.name}</h1>
             {isCompleted ? (
-              <Badge variant="success">Terminee</Badge>
+              <Badge variant="success">Terminée</Badge>
             ) : isPaused ? (
               <Badge variant="default">En pause</Badge>
             ) : (

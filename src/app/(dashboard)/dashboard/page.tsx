@@ -70,8 +70,8 @@ export default async function DashboardPage() {
         </h1>
         <p className="text-sm sm:text-base text-slate-400 mt-1">
           {isCoach
-            ? "Gerez vos athletes et leurs programmes d'entrainement"
-            : "Creez vos programmes, entrainez-vous et suivez votre progression"}
+            ? "Gérez vos athlètes et leurs programmes d'entraînement"
+            : "Créez vos programmes, entraînez-vous et suivez votre progression"}
         </p>
       </div>
 
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="flex items-center justify-center py-4 text-center">
                 <p className="text-slate-400 text-sm">
-                  Completez plusieurs check-ins pour voir votre tendance
+                  Complétez plusieurs check-ins pour voir votre tendance
                 </p>
               </div>
             </CardContent>
@@ -99,7 +99,7 @@ export default async function DashboardPage() {
         {isCoach ? (
           <>
             <StatCard
-              title="Athletes"
+              title="Athlètes"
               value="0"
               subtitle="actifs"
               icon="users"
@@ -107,17 +107,17 @@ export default async function DashboardPage() {
             <StatCard
               title="Programmes"
               value="0"
-              subtitle="crees"
+              subtitle="créés"
               icon="clipboard"
             />
             <StatCard
-              title="Seances"
+              title="Séances"
               value="0"
               subtitle="cette semaine"
               icon="dumbbell"
             />
             <StatCard
-              title="Taux de completion"
+              title="Taux de complétion"
               value="0%"
               subtitle="ce mois"
               icon="chart"
@@ -132,21 +132,21 @@ export default async function DashboardPage() {
               icon="clipboard"
             />
             <StatCard
-              title="Seances"
+              title="Séances"
               value="0"
               subtitle="cette semaine"
               icon="dumbbell"
             />
             <StatCard
-              title="Series"
+              title="Séries"
               value="0"
-              subtitle="completees"
+              subtitle="complétées"
               icon="target"
             />
             <StatCard
               title="Streak"
               value="0"
-              subtitle="jours consecutifs"
+              subtitle="jours consécutifs"
               icon="fire"
             />
           </>
@@ -159,7 +159,7 @@ export default async function DashboardPage() {
         <Card>
           <CardHeader>
             <h2 className="text-base sm:text-lg font-semibold text-white">
-              {isCoach ? "Activite recente" : "Prochaines seances"}
+              {isCoach ? "Activité récente" : "Prochaines séances"}
             </h2>
           </CardHeader>
           <CardContent>
@@ -169,13 +169,13 @@ export default async function DashboardPage() {
               </div>
               <p className="text-slate-400">
                 {isCoach
-                  ? "L'activite de vos athletes apparaitra ici"
-                  : "Vos prochaines seances apparaitront ici"}
+                  ? "L'activité de vos athlètes apparaîtra ici"
+                  : "Vos prochaines séances apparaîtront ici"}
               </p>
               <p className="text-sm text-slate-500 mt-1">
                 {isCoach
-                  ? "Commencez par inviter des athletes"
-                  : "Creez un programme ou attendez que votre coach vous en assigne un"}
+                  ? "Commencez par inviter des athlètes"
+                  : "Créez un programme ou attendez que votre coach vous en assigne un"}
               </p>
             </div>
           </CardContent>
@@ -194,20 +194,20 @@ export default async function DashboardPage() {
                 <>
                   <QuickAction
                     icon="plus"
-                    title="Creer un programme"
-                    description="Nouveau programme d'entrainement"
+                    title="Créer un programme"
+                    description="Nouveau programme d'entraînement"
                     href="/dashboard/programs/new"
                   />
                   <QuickAction
                     icon="user"
-                    title="Inviter un athlete"
-                    description="Ajouter un nouvel athlete"
+                    title="Inviter un athlète"
+                    description="Ajouter un nouvel athlète"
                     href="/dashboard/athletes"
                   />
                   <QuickAction
                     icon="chart"
                     title="Voir les statistiques"
-                    description="Performances de vos athletes"
+                    description="Performances de vos athlètes"
                     href="/dashboard/stats"
                   />
                 </>
@@ -215,8 +215,8 @@ export default async function DashboardPage() {
                 <>
                   <QuickAction
                     icon="dumbbell"
-                    title="Commencer une seance"
-                    description="Demarrer votre entrainement"
+                    title="Commencer une séance"
+                    description="Démarrer votre entraînement"
                     href="/dashboard/workout"
                   />
                   <QuickAction
