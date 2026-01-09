@@ -138,15 +138,14 @@ export default async function WorkoutPage({ searchParams }: PageProps) {
   // Get current day of week (1 = Monday, 7 = Sunday)
   const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
 
-  // Calculate session type counts for today's sessions
-  const todaysSessions = allSessions.filter((s) => s.day_of_week === dayOfWeek);
+  // Calculate session type counts for ALL sessions (not just today)
   const sessionTypeCounts: { type: ExerciseType; total: number; completed: number }[] = [
     { type: "flexibility", total: 0, completed: 0 },
     { type: "cardio", total: 0, completed: 0 },
     { type: "strength", total: 0, completed: 0 },
   ];
 
-  todaysSessions.forEach((session) => {
+  allSessions.forEach((session) => {
     const typeCount = sessionTypeCounts.find((c) => c.type === session.session_type);
     if (typeCount) {
       typeCount.total++;
@@ -222,11 +221,11 @@ export default async function WorkoutPage({ searchParams }: PageProps) {
         </p>
       </div>
 
-      {/* Training Type Selector - Only show when not filtered */}
-      {!validFilterType && sessionTypeCounts.some((c) => c.total > 0) && (
+      {/* Training Type Selector - Always show when not filtered */}
+      {!validFilterType && (
         <TrainingTypeSelector
           sessionCounts={sessionTypeCounts}
-          title={`Entrainements du jour (${getDayName(dayOfWeek)})`}
+          title="Types d'entrainements"
         />
       )}
 

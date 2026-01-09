@@ -74,9 +74,36 @@ export function TrainingTypeCard({
 }: TrainingTypeCardProps) {
   const config = typeConfig[type];
   const hasRemaining = sessionCount > completedCount;
+  const isEmpty = sessionCount === 0;
 
-  if (sessionCount === 0) {
-    return null;
+  // Show disabled state if no sessions
+  if (isEmpty) {
+    return (
+      <div
+        className={`
+          relative p-4 rounded-xl border border-slate-700/50
+          bg-slate-800/30 opacity-60
+        `}
+      >
+        <div className="flex flex-col items-center text-center">
+          <div
+            className={`
+              w-14 h-14 rounded-full bg-slate-700/50
+              flex items-center justify-center mb-3
+              text-slate-500
+            `}
+          >
+            <TypeIcon type={type} />
+          </div>
+          <h3 className="font-semibold text-slate-500 text-sm mb-1">
+            {config.label}
+          </h3>
+          <p className="text-xs text-slate-600">
+            Aucune seance
+          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
