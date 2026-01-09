@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, EmptyState, Badge } from "@/components/ui";
 import { PlayIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { TrainingTypeSelector } from "@/components/training/training-type-selector";
+import type { ExerciseType } from "@/types/database";
 
 export const metadata = {
   title: "Commencer un entraînement",
@@ -14,6 +16,7 @@ interface SessionData {
   description: string | null;
   estimated_duration_minutes: number | null;
   day_of_week: number | null;
+  session_type: ExerciseType;
   program: {
     id: string;
     name: string;
@@ -22,7 +25,12 @@ interface SessionData {
   };
 }
 
-export default async function WorkoutPage() {
+interface PageProps {
+  searchParams: Promise<{ type?: string }>;
+}
+
+export default async function WorkoutPage({ searchParams }: PageProps) {
+  const { type: filterType } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -49,6 +57,7 @@ export default async function WorkoutPage() {
     description: string | null;
     estimated_duration_minutes: number | null;
     day_of_week: number | null;
+    session_type: ExerciseType;
     program: { id: string; name: string; coach_id: string | null };
   }[] = [];
 
@@ -61,12 +70,16 @@ export default async function WorkoutPage() {
         description,
         estimated_duration_minutes,
         day_of_week,
+        session_type,
         program:programs!inner(id, name, coach_id)
       `)
       .eq("is_deleted", false)
       .in("program_id", assignedProgramIds);
 
-    assignedSessions = (data || []) as typeof assignedSessions;
+    assignedSessions = (data || []).map(s => ({
+      ...s,
+      session_type: (s.session_type || "strength") as ExerciseType,
+    })) as typeof assignedSessions;
   }
 
   // Try to get sessions from own programs (athlete created) - requires migration 007
@@ -79,6 +92,7 @@ export default async function WorkoutPage() {
       description,
       estimated_duration_minutes,
       day_of_week,
+      session_type,
       program:programs!inner(id, name, coach_id)
     `)
     .eq("is_deleted", false)
@@ -87,7 +101,10 @@ export default async function WorkoutPage() {
 
   // Only use ownSessions if no error (created_by column might not exist)
   if (!ownError) {
-    ownSessions = (ownData || []) as typeof ownSessions;
+    ownSessions = (ownData || []).map(s => ({
+      ...s,
+      session_type: (s.session_type || "strength") as ExerciseType,
+    })) as typeof ownSessions;
   }
 
   // Combine sessions (add created_by: null for compatibility)
@@ -121,8 +138,35 @@ export default async function WorkoutPage() {
   // Get current day of week (1 = Monday, 7 = Sunday)
   const dayOfWeek = today.getDay() === 0 ? 7 : today.getDay();
 
+  // Calculate session type counts for today's sessions
+  const todaysSessions = allSessions.filter((s) => s.day_of_week === dayOfWeek);
+  const sessionTypeCounts: { type: ExerciseType; total: number; completed: number }[] = [
+    { type: "flexibility", total: 0, completed: 0 },
+    { type: "cardio", total: 0, completed: 0 },
+    { type: "strength", total: 0, completed: 0 },
+  ];
+
+  todaysSessions.forEach((session) => {
+    const typeCount = sessionTypeCounts.find((c) => c.type === session.session_type);
+    if (typeCount) {
+      typeCount.total++;
+      if (completedToday.has(session.id)) {
+        typeCount.completed++;
+      }
+    }
+  });
+
+  // Filter sessions by type if filterType is provided
+  const validFilterType = filterType && ["strength", "cardio", "flexibility"].includes(filterType)
+    ? (filterType as ExerciseType)
+    : null;
+
+  const filteredSessions = validFilterType
+    ? allSessions.filter((s) => s.session_type === validFilterType)
+    : allSessions;
+
   // Sort sessions: today's sessions first, then by program
-  const sortedSessions = allSessions.sort((a, b) => {
+  const sortedSessions = filteredSessions.sort((a, b) => {
     // Today's sessions first
     const aIsToday = a.day_of_week === dayOfWeek;
     const bIsToday = b.day_of_week === dayOfWeek;
@@ -149,24 +193,49 @@ export default async function WorkoutPage() {
     {} as Record<string, { program: SessionData["program"]; sessions: SessionData[] }>
   );
 
+  const getTypeLabel = (type: ExerciseType) => {
+    const labels: Record<ExerciseType, string> = {
+      flexibility: "Mobilite",
+      cardio: "Cardio",
+      strength: "Musculation",
+    };
+    return labels[type];
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-white">
-          Commencer un entraînement
+          {validFilterType
+            ? `Entrainements ${getTypeLabel(validFilterType)}`
+            : "Commencer un entrainement"}
         </h1>
         <p className="text-sm sm:text-base text-slate-400 mt-1">
-          Choisissez une séance pour commencer votre entraînement
+          {validFilterType ? (
+            <Link href="/dashboard/workout" className="text-emerald-400 hover:underline">
+              Voir tous les types
+            </Link>
+          ) : (
+            "Choisissez une seance pour commencer votre entrainement"
+          )}
         </p>
       </div>
 
-      {/* Today's Suggested Sessions */}
-      {sortedSessions.some((s) => s.day_of_week === dayOfWeek) && (
+      {/* Training Type Selector - Only show when not filtered */}
+      {!validFilterType && sessionTypeCounts.some((c) => c.total > 0) && (
+        <TrainingTypeSelector
+          sessionCounts={sessionTypeCounts}
+          title={`Entrainements du jour (${getDayName(dayOfWeek)})`}
+        />
+      )}
+
+      {/* Today's Sessions with Type Filter */}
+      {validFilterType && sortedSessions.some((s) => s.day_of_week === dayOfWeek) && (
         <Card>
           <CardHeader>
             <h2 className="text-lg font-semibold text-white">
-              🎯 Séances du jour ({getDayName(dayOfWeek)})
+              Seances du jour ({getDayName(dayOfWeek)})
             </h2>
           </CardHeader>
           <CardContent>
@@ -239,6 +308,12 @@ function getDayName(day: number): string {
   return days[day] || "";
 }
 
+const typeStyles: Record<ExerciseType, { bg: string; text: string; label: string }> = {
+  strength: { bg: "bg-emerald-500/20", text: "text-emerald-400", label: "Musculation" },
+  cardio: { bg: "bg-orange-500/20", text: "text-orange-400", label: "Cardio" },
+  flexibility: { bg: "bg-purple-500/20", text: "text-purple-400", label: "Mobilite" },
+};
+
 function SessionCard({
   session,
   isCompleted,
@@ -248,6 +323,9 @@ function SessionCard({
   isCompleted: boolean;
   isInProgress: boolean;
 }) {
+  const sessionType = session.session_type || "strength";
+  const typeStyle = typeStyles[sessionType];
+
   return (
     <Link href={`/dashboard/training/${session.id}`}>
       <div
@@ -262,9 +340,14 @@ function SessionCard({
       >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h4 className="font-medium text-white truncate">{session.name}</h4>
+            <div className="flex items-center gap-2 mb-1">
+              <h4 className="font-medium text-white truncate">{session.name}</h4>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded ${typeStyle.bg} ${typeStyle.text}`}>
+                {typeStyle.label}
+              </span>
+            </div>
             {session.description && (
-              <p className="text-xs text-slate-400 line-clamp-2 mt-1">
+              <p className="text-xs text-slate-400 line-clamp-2">
                 {session.description}
               </p>
             )}
@@ -277,10 +360,10 @@ function SessionCard({
         </div>
         <div className="flex items-center gap-3 mt-3 text-xs text-slate-500">
           {session.estimated_duration_minutes && (
-            <span>⏱️ {session.estimated_duration_minutes} min</span>
+            <span>{session.estimated_duration_minutes} min</span>
           )}
           {session.day_of_week && (
-            <span>📅 {getDayName(session.day_of_week)}</span>
+            <span>{getDayName(session.day_of_week)}</span>
           )}
         </div>
         <div className="mt-3">

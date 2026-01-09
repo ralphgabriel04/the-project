@@ -356,6 +356,125 @@ export async function resumeSession(
 }
 
 /**
+ * Log a cardio exercise (distance, duration, heart rate)
+ */
+export async function logCardioExercise(
+  sessionLogId: string,
+  exerciseId: string,
+  formData: FormData,
+): Promise<TrainingActionResult> {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { success: false, error: "Non authentifie" };
+  }
+
+  const distanceKm = formData.get("distance_km") as string;
+  const durationMinutes = formData.get("duration_minutes") as string;
+  const heartRateAvg = formData.get("heart_rate_avg") as string;
+  const heartRateMax = formData.get("heart_rate_max") as string;
+  const notes = formData.get("notes") as string;
+
+  // Calculate pace if distance and duration provided
+  let pacePerKmSeconds: number | null = null;
+  if (distanceKm && durationMinutes) {
+    const distance = parseFloat(distanceKm);
+    const duration = parseInt(durationMinutes, 10);
+    if (distance > 0 && duration > 0) {
+      pacePerKmSeconds = Math.round((duration * 60) / distance);
+    }
+  }
+
+  const { data, error } = await supabase
+    .from("exercise_logs")
+    .insert({
+      session_log_id: sessionLogId,
+      exercise_id: exerciseId,
+      athlete_id: user.id,
+      set_number: 1, // Cardio exercises typically have a single "set"
+      distance_km: distanceKm ? parseFloat(distanceKm) : null,
+      duration_minutes: durationMinutes ? parseInt(durationMinutes, 10) : null,
+      heart_rate_avg: heartRateAvg ? parseInt(heartRateAvg, 10) : null,
+      heart_rate_max: heartRateMax ? parseInt(heartRateMax, 10) : null,
+      pace_per_km_seconds: pacePerKmSeconds,
+      notes: notes?.trim() || null,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("Log cardio exercise error:", error);
+    return { success: false, error: "Erreur lors de l'enregistrement" };
+  }
+
+  return {
+    success: true,
+    message: "Exercice enregistre !",
+    data: { id: data.id },
+  };
+}
+
+/**
+ * Get last performance for an exercise
+ */
+export async function getLastExercisePerformance(
+  exerciseId: string,
+  athleteId?: string,
+) {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const targetAthleteId = athleteId || user?.id;
+  if (!targetAthleteId) {
+    return null;
+  }
+
+  // Use RPC function if available, otherwise fallback to direct query
+  const { data: rpcData, error: rpcError } = await supabase.rpc(
+    "get_last_exercise_performance",
+    {
+      p_exercise_id: exerciseId,
+      p_athlete_id: targetAthleteId,
+    }
+  );
+
+  if (!rpcError && rpcData && rpcData.length > 0) {
+    return rpcData[0];
+  }
+
+  // Fallback query
+  const { data } = await supabase
+    .from("exercise_logs")
+    .select(`
+      id,
+      weight_kg,
+      reps_completed,
+      rpe,
+      distance_km,
+      duration_minutes,
+      heart_rate_avg,
+      pace_per_km_seconds,
+      session_logs!inner(completed_at)
+    `)
+    .eq("exercise_id", exerciseId)
+    .eq("athlete_id", targetAthleteId)
+    .eq("is_deleted", false)
+    .not("session_logs.completed_at", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  return data;
+}
+
+/**
  * Upload a session image
  */
 export async function uploadSessionImage(

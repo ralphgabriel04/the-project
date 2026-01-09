@@ -4,10 +4,12 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, Badge } from "@/components/ui";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { TrainingExerciseCard } from "@/components/training/exercise-card";
+import { CardioExerciseCard } from "@/components/training/cardio-exercise-card";
 import { CompleteSessionButton } from "@/components/training/complete-session";
 import { PauseSessionButton } from "@/components/training/pause-session";
 import { ImageUpload } from "@/components/training/image-upload";
 import { SessionTimer } from "@/components/training/session-timer";
+import type { ExerciseType, IntensityLevel } from "@/types/database";
 
 interface PageProps {
   params: Promise<{ sessionId: string }>;
@@ -114,9 +116,56 @@ export default async function TrainingSessionPage({ params }: PageProps) {
   // Sort exercises by order_index
   const exercises = (session.exercises || [])
     .filter((e: { is_deleted: boolean }) => !e.is_deleted)
-    .sort((a: { order_index: number }, b: { order_index: number }) => 
+    .sort((a: { order_index: number }, b: { order_index: number }) =>
       a.order_index - b.order_index
     );
+
+  // Get session type with fallback
+  const sessionType: ExerciseType = (session.session_type as ExerciseType) || "strength";
+
+  // Fetch last performances for cardio exercises
+  const cardioExercises = exercises.filter(
+    (e: { exercise_type?: ExerciseType }) => e.exercise_type === "cardio" || e.exercise_type === "flexibility"
+  );
+
+  const lastPerformances: Record<string, {
+    distance_km?: number | null;
+    duration_minutes?: number | null;
+    heart_rate_avg?: number | null;
+    pace_per_km_seconds?: number | null;
+  }> = {};
+
+  // Fetch last performance for each cardio exercise
+  for (const exercise of cardioExercises) {
+    const { data: lastPerf } = await supabase
+      .from("exercise_logs")
+      .select(`
+        distance_km,
+        duration_minutes,
+        heart_rate_avg,
+        pace_per_km_seconds,
+        session_logs!inner(completed_at)
+      `)
+      .eq("exercise_id", exercise.id)
+      .eq("athlete_id", user.id)
+      .eq("is_deleted", false)
+      .not("session_logs.completed_at", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (lastPerf) {
+      lastPerformances[exercise.id] = lastPerf;
+    }
+  }
+
+  // Type style mapping
+  const typeStyles: Record<ExerciseType, { bg: string; text: string; label: string }> = {
+    strength: { bg: "bg-emerald-500/20", text: "text-emerald-400", label: "Musculation" },
+    cardio: { bg: "bg-orange-500/20", text: "text-orange-400", label: "Cardio" },
+    flexibility: { bg: "bg-purple-500/20", text: "text-purple-400", label: "Mobilite" },
+  };
+  const sessionTypeStyle = typeStyles[sessionType];
 
   // Handle case where session log couldn't be created
   if (!sessionLog) {
@@ -157,8 +206,11 @@ export default async function TrainingSessionPage({ params }: PageProps) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <h1 className="text-xl sm:text-2xl font-bold text-white">{session.name}</h1>
+            <span className={`text-xs px-2 py-0.5 rounded ${sessionTypeStyle.bg} ${sessionTypeStyle.text}`}>
+              {sessionTypeStyle.label}
+            </span>
             {isCompleted ? (
-              <Badge variant="success">Terminée</Badge>
+              <Badge variant="success">Terminee</Badge>
             ) : isPaused ? (
               <Badge variant="default">En pause</Badge>
             ) : (
@@ -226,23 +278,59 @@ export default async function TrainingSessionPage({ params }: PageProps) {
             {exercises.map((exercise: {
               id: string;
               name: string;
+              description: string | null;
               sets: number | null;
               reps: string | null;
               rest_seconds: number | null;
               tempo: string | null;
               notes: string | null;
-            }, index: number) => (
-              <TrainingExerciseCard
-                key={exercise.id}
-                exercise={exercise}
-                index={index}
-                sessionLogId={sessionLog?.id || ""}
-                exerciseLogs={(sessionLog?.exercise_logs || []).filter(
-                  (log: { exercise_id: string }) => log.exercise_id === exercise.id
-                )}
-                isCompleted={isCompleted}
-              />
-            ))}
+              exercise_type?: ExerciseType;
+              target_distance_km: number | null;
+              target_duration_minutes: number | null;
+              target_heart_rate: number | null;
+              intensity: IntensityLevel | null;
+            }, index: number) => {
+              const exerciseType = exercise.exercise_type || "strength";
+              const exerciseLogs = (sessionLog?.exercise_logs || []).filter(
+                (log: { exercise_id: string }) => log.exercise_id === exercise.id
+              );
+
+              // Render cardio card for cardio/flexibility exercises
+              if (exerciseType === "cardio" || exerciseType === "flexibility") {
+                return (
+                  <CardioExerciseCard
+                    key={exercise.id}
+                    exercise={{
+                      id: exercise.id,
+                      name: exercise.name,
+                      description: exercise.description,
+                      target_distance_km: exercise.target_distance_km,
+                      target_duration_minutes: exercise.target_duration_minutes,
+                      target_heart_rate: exercise.target_heart_rate,
+                      intensity: exercise.intensity,
+                      notes: exercise.notes,
+                    }}
+                    index={index}
+                    sessionLogId={sessionLog?.id || ""}
+                    exerciseLog={exerciseLogs[0] || null}
+                    lastPerformance={lastPerformances[exercise.id] || null}
+                    isCompleted={isCompleted}
+                  />
+                );
+              }
+
+              // Render strength card for strength exercises
+              return (
+                <TrainingExerciseCard
+                  key={exercise.id}
+                  exercise={exercise}
+                  index={index}
+                  sessionLogId={sessionLog?.id || ""}
+                  exerciseLogs={exerciseLogs}
+                  isCompleted={isCompleted}
+                />
+              );
+            })}
           </div>
         )}
       </div>

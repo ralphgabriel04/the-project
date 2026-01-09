@@ -13,6 +13,10 @@ export type InvitationStatus = "pending" | "accepted" | "rejected";
 
 export type ProgramStatus = "draft" | "active" | "archived";
 
+export type ExerciseType = "strength" | "cardio" | "flexibility";
+
+export type IntensityLevel = "easy" | "moderate" | "hard" | "very_hard";
+
 // ============================================
 // BASE TYPES (matching DB columns)
 // ============================================
@@ -74,6 +78,7 @@ export interface Session {
   week_number: number;
   order_index: number;
   estimated_duration_minutes: number | null;
+  session_type: ExerciseType;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -91,6 +96,12 @@ export interface Exercise {
   notes: string | null;
   video_url: string | null;
   order_index: number;
+  // Cardio/Flexibility fields
+  exercise_type: ExerciseType;
+  target_distance_km: number | null;
+  target_duration_minutes: number | null;
+  target_heart_rate: number | null;
+  intensity: IntensityLevel | null;
   created_at: string;
   updated_at: string;
   is_deleted: boolean;
@@ -116,9 +127,16 @@ export interface ExerciseLog {
   exercise_id: string;
   athlete_id: string;
   set_number: number;
+  // Strength fields
   weight_kg: number | null;
   reps_completed: number | null;
   rpe: number | null; // 1-10
+  // Cardio fields
+  distance_km: number | null;
+  duration_minutes: number | null;
+  heart_rate_avg: number | null;
+  heart_rate_max: number | null;
+  pace_per_km_seconds: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -232,6 +250,7 @@ export type SessionInsert = Pick<Session, "program_id" | "name"> &
       | "week_number"
       | "order_index"
       | "estimated_duration_minutes"
+      | "session_type"
     >
   >;
 
@@ -247,6 +266,11 @@ export type ExerciseInsert = Pick<Exercise, "session_id" | "name"> &
       | "notes"
       | "video_url"
       | "order_index"
+      | "exercise_type"
+      | "target_distance_km"
+      | "target_duration_minutes"
+      | "target_heart_rate"
+      | "intensity"
     >
   >;
 
@@ -266,7 +290,20 @@ export type ExerciseLogInsert = Pick<
   ExerciseLog,
   "session_log_id" | "exercise_id" | "athlete_id" | "set_number"
 > &
-  Partial<Pick<ExerciseLog, "weight_kg" | "reps_completed" | "rpe" | "notes">>;
+  Partial<
+    Pick<
+      ExerciseLog,
+      | "weight_kg"
+      | "reps_completed"
+      | "rpe"
+      | "notes"
+      | "distance_km"
+      | "duration_minutes"
+      | "heart_rate_avg"
+      | "heart_rate_max"
+      | "pace_per_km_seconds"
+    >
+  >;
 
 export type SessionImageInsert = Pick<
   SessionImage,
@@ -316,6 +353,7 @@ export type SessionUpdate = Partial<
     | "week_number"
     | "order_index"
     | "estimated_duration_minutes"
+    | "session_type"
   >
 >;
 
@@ -331,6 +369,11 @@ export type ExerciseUpdate = Partial<
     | "notes"
     | "video_url"
     | "order_index"
+    | "exercise_type"
+    | "target_distance_km"
+    | "target_duration_minutes"
+    | "target_heart_rate"
+    | "intensity"
   >
 >;
 
@@ -475,6 +518,8 @@ export interface Database {
       user_role: UserRole;
       invitation_status: InvitationStatus;
       program_status: ProgramStatus;
+      exercise_type: ExerciseType;
+      intensity_level: IntensityLevel;
     };
     CompositeTypes: Record<string, never>;
   };

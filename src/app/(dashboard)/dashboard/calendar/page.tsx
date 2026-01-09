@@ -1,8 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { Card, CardContent, EmptyState, Badge } from "@/components/ui";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import { Card, CardContent, EmptyState } from "@/components/ui";
+import { CalendarView } from "@/components/calendar";
+import type { ExerciseType } from "@/types/database";
 
 export const metadata = {
   title: "Calendrier",
@@ -14,6 +14,7 @@ interface SessionData {
   description: string | null;
   day_of_week: number | null;
   estimated_duration_minutes: number | null;
+  session_type?: ExerciseType;
   program: {
     id: string;
     name: string;
@@ -56,12 +57,16 @@ export default async function CalendarPage() {
         description,
         day_of_week,
         estimated_duration_minutes,
+        session_type,
         program:programs!inner(id, name)
       `)
       .eq("is_deleted", false)
       .in("program_id", assignedProgramIds);
 
-    assignedSessions = (data || []) as SessionData[];
+    assignedSessions = (data || []).map(s => ({
+      ...s,
+      session_type: (s.session_type || "strength") as ExerciseType,
+    })) as SessionData[];
   }
 
   // Try to get sessions from own programs (athlete created) - requires migration 007
@@ -74,6 +79,7 @@ export default async function CalendarPage() {
       description,
       day_of_week,
       estimated_duration_minutes,
+      session_type,
       program:programs!inner(id, name)
     `)
     .eq("is_deleted", false)
@@ -82,7 +88,10 @@ export default async function CalendarPage() {
 
   // Only use ownSessions if no error (created_by column might not exist)
   if (!ownError) {
-    ownSessions = (ownData || []) as SessionData[];
+    ownSessions = (ownData || []).map(s => ({
+      ...s,
+      session_type: (s.session_type || "strength") as ExerciseType,
+    })) as SessionData[];
   }
 
   const allSessions: SessionData[] = [
@@ -115,11 +124,28 @@ export default async function CalendarPage() {
     completedByDay.get(dayOfWeek)!.add(log.session_id);
   });
 
-  // Group sessions by day of week
-  const sessionsByDay: Record<number, SessionData[]> = {};
-  for (let i = 1; i <= 7; i++) {
-    sessionsByDay[i] = allSessions.filter((s) => s.day_of_week === i);
-  }
+  // Create set of all completed session IDs
+  const completedSessionIds = new Set<string>(
+    completedLogs?.map((log) => log.session_id) || []
+  );
+
+  // Get workout counts by month for year view
+  const yearStart = new Date(today.getFullYear(), 0, 1);
+  const yearEnd = new Date(today.getFullYear(), 11, 31, 23, 59, 59);
+
+  const { data: yearLogs } = await supabase
+    .from("session_logs")
+    .select("completed_at")
+    .eq("athlete_id", user.id)
+    .not("completed_at", "is", null)
+    .gte("created_at", yearStart.toISOString())
+    .lte("created_at", yearEnd.toISOString());
+
+  const workoutCountsByMonth: Record<number, number> = {};
+  yearLogs?.forEach((log) => {
+    const month = new Date(log.completed_at!).getMonth();
+    workoutCountsByMonth[month] = (workoutCountsByMonth[month] || 0) + 1;
+  });
 
   return (
     <div className="space-y-6">
@@ -127,179 +153,27 @@ export default async function CalendarPage() {
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-white">Calendrier</h1>
         <p className="text-sm sm:text-base text-slate-400 mt-1">
-          Visualisez votre planning d&apos;entraînement de la semaine
+          Visualisez votre planning d&apos;entrainement
         </p>
       </div>
 
-      {/* Week navigation */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center justify-center">
-            <h2 className="text-lg font-semibold text-white">
-              {formatWeekRange(weekDays[0], weekDays[6])}
-            </h2>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Week view - Desktop */}
-      <div className="hidden md:grid md:grid-cols-7 gap-2">
-        {weekDays.map((day, index) => {
-          const dayOfWeek = index + 1; // 1 = Monday
-          const isToday = isSameDay(day, today);
-          const sessionsForDay = sessionsByDay[dayOfWeek] || [];
-          const completedForDay = completedByDay.get(dayOfWeek) || new Set();
-
-          return (
-            <div
-              key={index}
-              className={`
-                min-h-[200px] rounded-xl border p-3
-                ${
-                  isToday
-                    ? "bg-emerald-500/10 border-emerald-500/50"
-                    : "bg-slate-800/50 border-slate-700"
-                }
-              `}
-            >
-              <div className="text-center mb-3">
-                <p className="text-xs text-slate-400 uppercase">
-                  {formatDayName(day)}
-                </p>
-                <p
-                  className={`text-lg font-bold ${
-                    isToday ? "text-emerald-400" : "text-white"
-                  }`}
-                >
-                  {day.getDate()}
-                </p>
-              </div>
-
-              {/* Sessions for this day */}
-              {sessionsForDay.length > 0 ? (
-                <div className="space-y-2">
-                  {sessionsForDay.map((session) => {
-                    const isCompleted = completedForDay.has(session.id);
-                    return (
-                      <Link
-                        key={session.id}
-                        href={`/dashboard/training/${session.id}`}
-                        className={`
-                          block p-2 rounded-lg text-xs transition-colors
-                          ${isCompleted
-                            ? "bg-emerald-500/20 border border-emerald-500/30"
-                            : "bg-slate-700/50 hover:bg-slate-700"}
-                        `}
-                      >
-                        <div className="flex items-start gap-1">
-                          {isCompleted && (
-                            <CheckCircleIcon className="h-3 w-3 text-emerald-400 flex-shrink-0 mt-0.5" />
-                          )}
-                          <span className="text-white font-medium line-clamp-2">
-                            {session.name}
-                          </span>
-                        </div>
-                        {session.estimated_duration_minutes && (
-                          <p className="text-slate-400 mt-1">
-                            {session.estimated_duration_minutes} min
-                          </p>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center text-slate-500 text-xs mt-8">
-                  Repos
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Week view - Mobile (list format) */}
-      <div className="md:hidden space-y-3">
-        {weekDays.map((day, index) => {
-          const dayOfWeek = index + 1;
-          const isToday = isSameDay(day, today);
-          const sessionsForDay = sessionsByDay[dayOfWeek] || [];
-          const completedForDay = completedByDay.get(dayOfWeek) || new Set();
-
-          return (
-            <Card
-              key={index}
-              className={isToday ? "border-emerald-500/50" : ""}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-semibold ${isToday ? "text-emerald-400" : "text-white"}`}>
-                      {formatDayName(day)} {day.getDate()}
-                    </span>
-                    {isToday && (
-                      <Badge variant="success">Aujourd&apos;hui</Badge>
-                    )}
-                  </div>
-                  <span className="text-xs text-slate-400">
-                    {sessionsForDay.length} séance{sessionsForDay.length !== 1 ? "s" : ""}
-                  </span>
-                </div>
-
-                {sessionsForDay.length > 0 ? (
-                  <div className="space-y-2">
-                    {sessionsForDay.map((session) => {
-                      const isCompleted = completedForDay.has(session.id);
-                      return (
-                        <Link
-                          key={session.id}
-                          href={`/dashboard/training/${session.id}`}
-                          className={`
-                            flex items-center justify-between p-3 rounded-lg
-                            ${isCompleted
-                              ? "bg-emerald-500/20 border border-emerald-500/30"
-                              : "bg-slate-700/50"}
-                          `}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isCompleted && (
-                              <CheckCircleIcon className="h-4 w-4 text-emerald-400" />
-                            )}
-                            <div>
-                              <p className="text-white font-medium">{session.name}</p>
-                              <p className="text-xs text-slate-400">{session.program.name}</p>
-                            </div>
-                          </div>
-                          {session.estimated_duration_minutes && (
-                            <span className="text-xs text-slate-400">
-                              {session.estimated_duration_minutes} min
-                            </span>
-                          )}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-slate-500 text-center py-2">
-                    Jour de repos
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Empty state if no sessions at all */}
-      {allSessions.length === 0 && (
+      {/* Calendar View */}
+      {allSessions.length > 0 ? (
+        <CalendarView
+          sessions={allSessions}
+          completedSessionIds={completedSessionIds}
+          completedByDay={completedByDay}
+          workoutCountsByMonth={workoutCountsByMonth}
+        />
+      ) : (
         <Card>
           <CardContent>
             <EmptyState
-              icon="📅"
-              title="Aucune séance planifiée"
-              description="Créez un programme avec des séances assignées à des jours de la semaine pour les voir apparaître ici."
+              icon="calendar"
+              title="Aucune seance planifiee"
+              description="Creez un programme avec des seances assignees a des jours de la semaine pour les voir apparaitre ici."
               action={{
-                label: "Créer un programme",
+                label: "Creer un programme",
                 href: "/dashboard/programs/new",
               }}
             />
@@ -310,7 +184,7 @@ export default async function CalendarPage() {
   );
 }
 
-// Helper functions
+// Helper function
 function getWeekDays(date: Date): Date[] {
   const d = new Date(date);
   const day = d.getDay();
@@ -323,29 +197,4 @@ function getWeekDays(date: Date): Date[] {
     newDate.setDate(monday.getDate() + i);
     return newDate;
   });
-}
-
-function formatDayName(date: Date): string {
-  return date.toLocaleDateString("fr-FR", { weekday: "short" });
-}
-
-function formatWeekRange(start: Date, end: Date): string {
-  const startStr = start.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "short",
-  });
-  const endStr = end.toLocaleDateString("fr-FR", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-  return `${startStr} - ${endStr}`;
-}
-
-function isSameDay(date1: Date, date2: Date): boolean {
-  return (
-    date1.getDate() === date2.getDate() &&
-    date1.getMonth() === date2.getMonth() &&
-    date1.getFullYear() === date2.getFullYear()
-  );
 }
