@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CardContent, CardHeader } from "@/components/ui";
+import { Button, Card, CardContent, Modal } from "@/components/ui";
 import { logReadiness, type ReadinessFormData } from "@/lib/actions/readiness";
 import type { ReadinessLog } from "@/types/database";
-import { XMarkIcon, CheckCircleIcon } from "@heroicons/react/24/outline";
+import { CheckCircleIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { useRouter } from "next/navigation";
 
 interface ReadinessFormProps {
@@ -15,73 +15,76 @@ export function ReadinessCard({ existingLog }: ReadinessFormProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (existingLog) {
-    // Show existing readiness score
+    // Show compact existing readiness score
     return (
       <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-white">Readiness</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsModalOpen(true)}
-            >
-              Modifier
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <div className="relative">
-              <ReadinessGauge score={existingLog.overall_score || 0} />
-            </div>
-            <div className="flex-1 grid grid-cols-2 gap-2 text-sm">
-              <MetricItem label="Sommeil" value={existingLog.sleep_quality} icon="moon" />
-              <MetricItem label="Énergie" value={existingLog.energy_level} icon="bolt" />
-              <MetricItem label="Courbatures" value={existingLog.muscle_soreness} icon="muscle" inverted />
-              <MetricItem label="Stress" value={existingLog.stress_level} icon="brain" inverted />
+            <ReadinessGauge score={existingLog.overall_score || 0} size="md" />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-semibold text-white">Readiness</h3>
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                >
+                  <PencilIcon className="h-4 w-4 text-slate-400" />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                <MetricItem label="Sommeil" value={existingLog.sleep_quality} />
+                <MetricItem label="Énergie" value={existingLog.energy_level} />
+                <MetricItem label="Courbatures" value={existingLog.muscle_soreness} inverted />
+                <MetricItem label="Stress" value={existingLog.stress_level} inverted />
+              </div>
             </div>
           </div>
-          {existingLog.notes && (
-            <p className="mt-3 text-sm text-slate-400 italic">{existingLog.notes}</p>
-          )}
         </CardContent>
 
-        {isModalOpen && (
-          <ReadinessModal
-            existingLog={existingLog}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+        <ReadinessModal
+          isOpen={isModalOpen}
+          existingLog={existingLog}
+          onClose={() => setIsModalOpen(false)}
+        />
       </Card>
     );
   }
 
-  // No log yet - show prompt
+  // No log yet - show compact prompt
   return (
     <Card className="border-dashed border-slate-600">
-      <CardContent className="p-6 text-center">
-        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-500/20 flex items-center justify-center">
-          <svg className="w-8 h-8 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+      <CardContent className="p-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+            <svg className="w-7 h-7 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <p className="text-white font-medium mb-1">Check-in Readiness</p>
+            <p className="text-sm text-slate-400 mb-2">Comment te sens-tu ?</p>
+            <Button size="sm" onClick={() => setIsModalOpen(true)}>
+              Faire mon check-in
+            </Button>
+          </div>
         </div>
-        <p className="text-slate-400 mb-4">
-          Comment te sens-tu aujourd&apos;hui ?
-        </p>
-        <Button onClick={() => setIsModalOpen(true)}>
-          Faire mon check-in
-        </Button>
-
-        {isModalOpen && (
-          <ReadinessModal onClose={() => setIsModalOpen(false)} />
-        )}
       </CardContent>
+
+      <ReadinessModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </Card>
   );
 }
 
-function ReadinessGauge({ score }: { score: number }) {
+function ReadinessGauge({ score, size = "md" }: { score: number; size?: "sm" | "md" | "lg" }) {
+  const sizeClasses = {
+    sm: "w-12 h-12 text-lg",
+    md: "w-14 h-14 text-xl",
+    lg: "w-20 h-20 text-2xl",
+  };
+
   const getColor = (score: number) => {
     if (score >= 8) return "text-emerald-400";
     if (score >= 6) return "text-yellow-400";
@@ -97,15 +100,15 @@ function ReadinessGauge({ score }: { score: number }) {
   };
 
   return (
-    <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${getBgColor(score)} flex items-center justify-center`}>
-      <span className={`text-2xl font-bold ${getColor(score)}`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${getBgColor(score)} flex items-center justify-center flex-shrink-0`}>
+      <span className={`font-bold ${getColor(score)}`}>
         {score.toFixed(1)}
       </span>
     </div>
   );
 }
 
-function MetricItem({ label, value, icon, inverted = false }: { label: string; value: number | null; icon: string; inverted?: boolean }) {
+function MetricItem({ label, value, inverted = false }: { label: string; value: number | null; inverted?: boolean }) {
   const displayValue = value || 0;
   const getColor = (v: number, inv: boolean) => {
     const effectiveValue = inv ? 11 - v : v;
@@ -116,55 +119,20 @@ function MetricItem({ label, value, icon, inverted = false }: { label: string; v
   };
 
   return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="text-slate-400 flex items-center gap-1">
-        <MetricIcon name={icon} />
-        {label}
-      </span>
-      <span className={`font-medium ${getColor(displayValue, inverted)}`}>{displayValue}/10</span>
+    <div className="flex items-center justify-between">
+      <span className="text-slate-400">{label}</span>
+      <span className={`font-medium ${getColor(displayValue, inverted)}`}>{displayValue}</span>
     </div>
   );
 }
 
-function MetricIcon({ name }: { name: string }) {
-  const iconClass = "w-4 h-4";
-
-  switch (name) {
-    case "moon":
-      return (
-        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-        </svg>
-      );
-    case "bolt":
-      return (
-        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      );
-    case "muscle":
-      return (
-        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-        </svg>
-      );
-    case "brain":
-      return (
-        <svg className={iconClass} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-      );
-    default:
-      return null;
-  }
-}
-
 interface ReadinessModalProps {
+  isOpen: boolean;
   existingLog?: ReadinessLog;
   onClose: () => void;
 }
 
-function ReadinessModal({ existingLog, onClose }: ReadinessModalProps) {
+function ReadinessModal({ isOpen, existingLog, onClose }: ReadinessModalProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -187,155 +155,110 @@ function ReadinessModal({ existingLog, onClose }: ReadinessModalProps) {
       setSuccess(true);
       setTimeout(() => {
         onClose();
+        setSuccess(false);
         router.refresh();
-      }, 1000);
+      }, 800);
     }
 
     setIsSubmitting(false);
   };
 
-  // Calculate preview score
   const previewScore = calculatePreviewScore(formData);
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-800 rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-700">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
-              <svg className="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">Check-in Readiness</h2>
-              <p className="text-sm text-slate-400">Comment te sens-tu aujourd&apos;hui ?</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-700 rounded-lg transition-colors"
-          >
-            <XMarkIcon className="h-5 w-5 text-slate-400" />
-          </button>
+    <Modal isOpen={isOpen} onClose={onClose} title="Check-in Readiness" size="md">
+      {success ? (
+        <div className="py-8 text-center">
+          <CheckCircleIcon className="h-14 w-14 text-emerald-400 mx-auto mb-3" />
+          <p className="text-white text-lg">Enregistré !</p>
         </div>
-
-        {success ? (
-          <div className="p-8 text-center">
-            <CheckCircleIcon className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-            <p className="text-white text-lg">Enregistré !</p>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          {/* Score Preview - Compact */}
+          <div className="flex items-center justify-center gap-4 py-4 mb-4 bg-slate-700/30 rounded-xl">
+            <ReadinessGauge score={previewScore} size="lg" />
+            <div>
+              <p className="text-2xl font-bold text-white">{previewScore.toFixed(1)}</p>
+              <p className="text-sm text-slate-400">Score prévu</p>
+            </div>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="p-5">
-            {/* Score Preview */}
-            <div className="flex justify-center mb-6">
-              <div className="text-center">
-                <div className={`w-24 h-24 rounded-full bg-gradient-to-br ${getScoreBgColor(previewScore)} flex items-center justify-center mx-auto mb-2`}>
-                  <span className={`text-3xl font-bold ${getScoreColor(previewScore)}`}>
-                    {previewScore.toFixed(1)}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-400">Score prévu</p>
-              </div>
-            </div>
 
-            {/* Metrics Grid */}
-            <div className="grid gap-4">
-              <MetricSlider
-                icon="moon"
-                label="Qualité du sommeil"
-                description="Comment as-tu dormi ?"
-                value={formData.sleep_quality}
-                onChange={(v) => setFormData((f) => ({ ...f, sleep_quality: v }))}
-                lowLabel="Très mauvais"
-                highLabel="Excellent"
-              />
+          {/* Compact Metrics - 2 columns */}
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <CompactSlider
+              label="Sommeil"
+              emoji="😴"
+              value={formData.sleep_quality}
+              onChange={(v) => setFormData((f) => ({ ...f, sleep_quality: v }))}
+            />
+            <CompactSlider
+              label="Énergie"
+              emoji="⚡"
+              value={formData.energy_level}
+              onChange={(v) => setFormData((f) => ({ ...f, energy_level: v }))}
+            />
+            <CompactSlider
+              label="Courbatures"
+              emoji="💪"
+              value={formData.muscle_soreness}
+              onChange={(v) => setFormData((f) => ({ ...f, muscle_soreness: v }))}
+              inverted
+            />
+            <CompactSlider
+              label="Stress"
+              emoji="🧠"
+              value={formData.stress_level}
+              onChange={(v) => setFormData((f) => ({ ...f, stress_level: v }))}
+              inverted
+            />
+          </div>
 
-              <MetricSlider
-                icon="bolt"
-                label="Niveau d'énergie"
-                description="Comment te sens-tu physiquement ?"
-                value={formData.energy_level}
-                onChange={(v) => setFormData((f) => ({ ...f, energy_level: v }))}
-                lowLabel="Épuisé"
-                highLabel="Plein d'énergie"
-              />
+          {/* Notes - Compact */}
+          <div className="mb-4">
+            <textarea
+              value={formData.notes}
+              onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
+              placeholder="Notes (optionnel)..."
+              className="w-full px-3 py-2 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none text-sm"
+              rows={2}
+            />
+          </div>
 
-              <MetricSlider
-                icon="muscle"
-                label="Courbatures musculaires"
-                description="As-tu des douleurs musculaires ?"
-                value={formData.muscle_soreness}
-                onChange={(v) => setFormData((f) => ({ ...f, muscle_soreness: v }))}
-                lowLabel="Aucune"
-                highLabel="Très douloureuses"
-                inverted
-              />
-
-              <MetricSlider
-                icon="brain"
-                label="Niveau de stress"
-                description="Comment te sens-tu mentalement ?"
-                value={formData.stress_level}
-                onChange={(v) => setFormData((f) => ({ ...f, stress_level: v }))}
-                lowLabel="Détendu"
-                highLabel="Très stressé"
-                inverted
-              />
-            </div>
-
-            {/* Notes */}
-            <div className="mt-5">
-              <label className="block text-sm font-medium text-white mb-2">
-                Notes (optionnel)
-              </label>
-              <textarea
-                value={formData.notes}
-                onChange={(e) => setFormData((f) => ({ ...f, notes: e.target.value }))}
-                placeholder="Ajoute des détails sur ton état du jour..."
-                className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                rows={2}
-              />
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 mt-6">
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex-1"
-                onClick={onClose}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="submit"
-                className="flex-1"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Enregistrement..." : "Enregistrer"}
-              </Button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
+          {/* Actions */}
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={onClose}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "..." : "Enregistrer"}
+            </Button>
+          </div>
+        </form>
+      )}
+    </Modal>
   );
 }
 
-interface MetricSliderProps {
-  icon: string;
+interface CompactSliderProps {
   label: string;
-  description: string;
+  emoji: string;
   value: number;
   onChange: (value: number) => void;
-  lowLabel: string;
-  highLabel: string;
   inverted?: boolean;
 }
 
-function MetricSlider({ icon, label, description, value, onChange, lowLabel, highLabel, inverted = false }: MetricSliderProps) {
+function CompactSlider({ label, emoji, value, onChange, inverted = false }: CompactSliderProps) {
   const getColor = (v: number, inv: boolean) => {
     const effectiveValue = inv ? 11 - v : v;
     if (effectiveValue >= 8) return "bg-emerald-500";
@@ -353,39 +276,29 @@ function MetricSlider({ icon, label, description, value, onChange, lowLabel, hig
   };
 
   return (
-    <div className="bg-slate-700/30 rounded-xl p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-slate-700 flex items-center justify-center">
-            <MetricIcon name={icon} />
-          </div>
-          <div>
-            <p className="font-medium text-white">{label}</p>
-            <p className="text-xs text-slate-400">{description}</p>
-          </div>
-        </div>
-        <span className={`px-3 py-1.5 rounded-lg text-white text-sm font-bold ${getColor(value, inverted)}`}>
-          {value}/10
+    <div className="bg-slate-700/30 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-sm text-white flex items-center gap-1.5">
+          <span>{emoji}</span>
+          {label}
+        </span>
+        <span className={`text-sm font-bold ${getTextColor(value, inverted)}`}>
+          {value}
         </span>
       </div>
-
-      <div className="relative">
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={value}
-          onChange={(e) => onChange(parseInt(e.target.value))}
-          className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-          style={{
-            background: `linear-gradient(to right, ${inverted ? '#ef4444' : '#10b981'} 0%, ${inverted ? '#10b981' : '#ef4444'} 100%)`
-          }}
-        />
-        <div className="flex justify-between mt-2">
-          <span className="text-xs text-slate-500">{lowLabel}</span>
-          <span className="text-xs text-slate-500">{highLabel}</span>
-        </div>
-      </div>
+      <input
+        type="range"
+        min="1"
+        max="10"
+        value={value}
+        onChange={(e) => onChange(parseInt(e.target.value))}
+        className="w-full h-1.5 bg-slate-600 rounded-lg appearance-none cursor-pointer"
+        style={{
+          accentColor: inverted
+            ? (value <= 3 ? '#10b981' : value <= 5 ? '#eab308' : value <= 7 ? '#f97316' : '#ef4444')
+            : (value >= 8 ? '#10b981' : value >= 6 ? '#eab308' : value >= 4 ? '#f97316' : '#ef4444')
+        }}
+      />
     </div>
   );
 }
@@ -406,18 +319,4 @@ function calculatePreviewScore(data: ReadinessFormData): number {
     invertedStress * stressWeight;
 
   return Math.round(score * 100) / 100;
-}
-
-function getScoreColor(score: number): string {
-  if (score >= 8) return "text-emerald-400";
-  if (score >= 6) return "text-yellow-400";
-  if (score >= 4) return "text-orange-400";
-  return "text-red-400";
-}
-
-function getScoreBgColor(score: number): string {
-  if (score >= 8) return "from-emerald-500/20 to-emerald-600/20";
-  if (score >= 6) return "from-yellow-500/20 to-yellow-600/20";
-  if (score >= 4) return "from-orange-500/20 to-orange-600/20";
-  return "from-red-500/20 to-red-600/20";
 }
