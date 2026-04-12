@@ -96,7 +96,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (insertError) {
-      console.error("Supabase insert error:", insertError);
+      console.error(
+        "Supabase insert error —",
+        "message:", insertError.message,
+        "code:", insertError.code,
+        "details:", insertError.details,
+        "hint:", insertError.hint,
+      );
       return NextResponse.json(
         { error: "Oups, quelque chose a planté. Réessaie dans un instant." },
         { status: 500 }
