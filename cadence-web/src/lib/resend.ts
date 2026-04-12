@@ -9,7 +9,7 @@ const COMPANY_NAME = "Cadence";
 const COMPANY_FOUNDERS = "Ralph & Alexandre";
 const COMPANY_POSTAL_ADDRESS = "Montréal, QC, Canada"; // TODO: civic address
 const REPLY_TO_EMAIL = "hello@cadence.app"; // TODO: verify domain in Resend
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://cadence-web.vercel.app";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://cadence-web-fawn.vercel.app";
 
 // Design tokens (mirror globals.css — Kinetic Pulse)
 const BG_PRIMARY = "#0A0A0B";
