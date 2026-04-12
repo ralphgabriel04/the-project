@@ -15,7 +15,7 @@ interface FormResponse {
   message?: string;
 }
 
-export function WaitlistForm({ location = "hero" }: { location?: "hero" | "bottom" | "sticky" }) {
+export function WaitlistForm() {
   const [email, setEmail] = useState("");
   const [consent, setConsent] = useState(false);
   const [formState, setFormState] = useState<FormState>("idle");
@@ -34,7 +34,7 @@ export function WaitlistForm({ location = "hero" }: { location?: "hero" | "botto
       return;
     }
 
-    if (!consent && location !== "sticky") {
+    if (!consent) {
       setFormState("error");
       setResponse({ error: "Tu dois accepter pour t'inscrire." });
       return;
@@ -50,7 +50,7 @@ export function WaitlistForm({ location = "hero" }: { location?: "hero" | "botto
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: email.toLowerCase().trim(),
-            consent: location === "sticky" ? true : consent,
+            consent,
           }),
         });
 
@@ -132,34 +132,6 @@ export function WaitlistForm({ location = "hero" }: { location?: "hero" | "botto
     );
   }
 
-  // Compact mode for sticky CTA
-  if (location === "sticky") {
-    return (
-      <form onSubmit={handleSubmit} className="flex w-full max-w-lg gap-2">
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            if (formState === "error") setFormState("idle");
-          }}
-          placeholder="ton@courriel.com"
-          disabled={isLoading}
-          aria-label="Adresse courriel"
-          className="h-11 flex-1 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-secondary)] px-4 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--accent)] focus:outline-none"
-        />
-        <button
-          type="submit"
-          disabled={isLoading || !email}
-          className="h-11 shrink-0 rounded-lg bg-[var(--accent)] px-5 text-sm font-semibold text-white transition-all hover:bg-[var(--accent-hover)] disabled:opacity-60"
-        >
-          {isLoading ? "..." : "Réserve ma place"}
-        </button>
-      </form>
-    );
-  }
-
-  // Default form (hero + bottom)
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md">
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -202,7 +174,7 @@ export function WaitlistForm({ location = "hero" }: { location?: "hero" | "botto
           type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
-          className="mt-1 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded border border-[var(--border-subtle)] bg-[var(--bg-secondary)] transition-colors checked:border-[var(--accent)] checked:bg-[var(--accent)]"
+          className="mt-1 h-[18px] w-[18px] shrink-0 cursor-pointer appearance-none rounded border border-white/50 bg-transparent transition-colors checked:border-[var(--accent)] checked:bg-[var(--accent)]"
           aria-required="true"
         />
         <span className="text-sm leading-relaxed text-[var(--text-muted)]">
