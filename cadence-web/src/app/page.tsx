@@ -1,11 +1,6 @@
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
-import { ValueProps } from "@/components/value-props";
-import { SocialProof } from "@/components/social-proof";
-import { FAQ } from "@/components/faq";
-import { CTAFinal } from "@/components/cta-final";
 import { Footer } from "@/components/footer";
-import { StickyCTA } from "@/components/sticky-cta";
 import { createServerSupabaseClient } from "@/lib/supabase";
 
 async function getWaitlistCount(): Promise<number> {
@@ -27,14 +22,9 @@ export default async function Home() {
     <div className="flex min-h-screen flex-col">
       <Navbar />
       <main className="flex-1">
-        <Hero />
-        <ValueProps />
-        <SocialProof initialCount={waitlistCount} />
-        <FAQ />
-        <CTAFinal />
+        <Hero waitlistCount={waitlistCount} />
       </main>
       <Footer />
-      <StickyCTA />
     </div>
   );
 }
