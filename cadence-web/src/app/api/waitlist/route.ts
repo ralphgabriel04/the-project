@@ -51,7 +51,44 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 
-    const { email } = result.data;
+    const { email, turnstileToken } = result.data;
+
+    // Verify Cloudflare Turnstile token server-side
+    const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+    if (turnstileSecret) {
+      const verifyForm = new URLSearchParams();
+      verifyForm.append("secret", turnstileSecret);
+      verifyForm.append("response", turnstileToken);
+      verifyForm.append("remoteip", ip);
+
+      try {
+        const verifyRes = await fetch(
+          "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+          {
+            method: "POST",
+            body: verifyForm,
+          }
+        );
+        const verifyData: { success: boolean; "error-codes"?: string[] } =
+          await verifyRes.json();
+
+        if (!verifyData.success) {
+          console.error("Turnstile verification failed:", verifyData["error-codes"]);
+          return NextResponse.json(
+            { error: "Vérification anti-bot échouée. Réessaie." },
+            { status: 403 }
+          );
+        }
+      } catch (verifyError) {
+        console.error("Turnstile verify request failed:", verifyError);
+        return NextResponse.json(
+          { error: "Vérification anti-bot indisponible. Réessaie dans un instant." },
+          { status: 503 }
+        );
+      }
+    } else {
+      console.warn("TURNSTILE_SECRET_KEY not set — skipping bot verification");
+    }
 
     // Initialize Supabase
     const supabase = createServerSupabaseClient();

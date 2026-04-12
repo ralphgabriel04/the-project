@@ -1,9 +1,12 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile";
 import { z } from "zod";
 
 const emailSchema = z.string().min(1).email();
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
 type FormState = "idle" | "loading" | "success" | "error";
 
@@ -22,7 +25,9 @@ export function WaitlistForm() {
   const [response, setResponse] = useState<FormResponse | null>(null);
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const referralRef = useRef<HTMLInputElement>(null);
+  const turnstileRef = useRef<TurnstileInstance | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +45,14 @@ export function WaitlistForm() {
       return;
     }
 
+    if (!turnstileToken) {
+      setFormState("error");
+      setResponse({
+        error: "Un instant — on vérifie que tu n'es pas un bot.",
+      });
+      return;
+    }
+
     startTransition(async () => {
       setFormState("loading");
       setResponse(null);
@@ -51,6 +64,7 @@ export function WaitlistForm() {
           body: JSON.stringify({
             email: email.toLowerCase().trim(),
             consent,
+            turnstileToken,
           }),
         });
 
@@ -63,12 +77,17 @@ export function WaitlistForm() {
         } else {
           setFormState("error");
           setResponse(data);
+          // Turnstile tokens are one-use — reset so user can retry
+          turnstileRef.current?.reset();
+          setTurnstileToken(null);
         }
       } catch {
         setFormState("error");
         setResponse({
           error: "Oups, quelque chose a planté. Réessaie dans un instant.",
         });
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
       }
     });
   };
@@ -188,6 +207,20 @@ export function WaitlistForm() {
           </span>
         </span>
       </label>
+
+      {/* Cloudflare Turnstile — invisible bot check */}
+      {TURNSTILE_SITE_KEY && (
+        <div className="mt-4">
+          <Turnstile
+            ref={turnstileRef}
+            siteKey={TURNSTILE_SITE_KEY}
+            onSuccess={(token) => setTurnstileToken(token)}
+            onError={() => setTurnstileToken(null)}
+            onExpire={() => setTurnstileToken(null)}
+            options={{ theme: "dark", size: "flexible" }}
+          />
+        </div>
+      )}
 
       {/* Error message */}
       {formState === "error" && response?.error && (
