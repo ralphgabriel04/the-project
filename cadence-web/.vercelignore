@@ -1,0 +1,13 @@
+# Local env files — managed via Vercel project env vars instead
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Local dev artifacts
+.next/
+node_modules/
+.claude/
+.agents/
+docs/
