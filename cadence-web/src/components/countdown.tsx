@@ -73,7 +73,7 @@ export function Countdown() {
         ))}
       </div>
       <p className="text-sm text-[var(--text-secondary)]">
-        avant l&apos;acces early-access
+        avant l&apos;accès early-access
       </p>
     </div>
   );

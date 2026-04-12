@@ -3,11 +3,11 @@
 import { useEffect, useState } from "react";
 
 const HINTS = [
-  "Tes athletes vont enfin voir leur progression.",
+  "Tes athlètes vont enfin voir leur progression.",
   "Fini les programmes sur screenshot.",
-  "Le lien coach-athlete, simplifie.",
+  "Le lien coach-athlète, simplifié.",
   "Ton gym dans ta poche. Pour vrai.",
-  "Tes athletes meritent mieux qu\u0027un Google Sheet.",
+  "Tes athlètes méritent mieux qu\u0027un Google Sheet.",
 ];
 
 const CYCLE_MS = 4000;
