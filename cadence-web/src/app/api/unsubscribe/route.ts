@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   const supabase = createServerSupabaseClient();
   const { data: subscriber } = await supabase
     .from("waitlist_subscribers")
-    .select("email, unsubscribed_at")
+    .select("email, unsubscribed_at, position")
     .eq("unsubscribe_token", token)
     .single();
 
@@ -71,7 +71,9 @@ export async function GET(request: NextRequest) {
     return new NextResponse(
       renderPage(
         "Déjà désinscrit",
-        `<h2>Tu es déjà désinscrit</h2><p>Ton adresse <strong style="color:${TEXT}">${subscriber.email}</strong> ne recevra plus d'emails de Cadence.</p>`
+        `<h2>Tu es déjà désinscrit</h2>
+         <p>Ton adresse <strong style="color:${TEXT}">${subscriber.email}</strong> ne recevra plus d'emails marketing de Cadence.</p>
+         <p>Bonne nouvelle : <strong style="color:${TEXT}">tu gardes ta place #${subscriber.position}</strong> sur la liste d'attente. On te contactera seulement quand ton accès sera prêt.</p>`
       ),
       { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
     );
@@ -80,10 +82,10 @@ export async function GET(request: NextRequest) {
   return new NextResponse(
     renderPage(
       "Désinscription",
-      `<h2>Te désinscrire de Cadence ?</h2>
-       <p>Tu ne recevras plus d'emails à <strong style="color:${TEXT}">${subscriber.email}</strong>. On te retirera aussi de la liste d'attente.</p>
+      `<h2>Arrêter les emails ?</h2>
+       <p>Tu ne recevras plus d'emails de rappel à <strong style="color:${TEXT}">${subscriber.email}</strong>, <strong style="color:${TEXT}">mais tu gardes ta place #${subscriber.position}</strong> sur la liste d'attente. On te contactera seulement quand ton accès sera prêt.</p>
        <form method="POST" action="/api/unsubscribe?token=${encodeURIComponent(token)}">
-         <button type="submit">Confirmer la désinscription</button>
+         <button type="submit">Arrêter les emails (je garde ma place)</button>
          <a href="/" class="btn secondary">Annuler</a>
        </form>`
     ),
@@ -110,10 +112,9 @@ export async function POST(request: NextRequest) {
     .from("waitlist_subscribers")
     .update({
       unsubscribed_at: new Date().toISOString(),
-      is_deleted: true,
     })
     .eq("unsubscribe_token", token)
-    .select("email")
+    .select("email, position")
     .single();
 
   if (error || !updated) {
@@ -129,9 +130,10 @@ export async function POST(request: NextRequest) {
 
   return new NextResponse(
     renderPage(
-      "Désinscrit",
+      "C'est fait",
       `<h2>C'est fait.</h2>
-       <p>Ton adresse <strong style="color:${TEXT}">${updated.email}</strong> ne recevra plus d'emails de Cadence. Merci d'avoir donné Cadence un essai — à bientôt peut-être.</p>
+       <p>Ton adresse <strong style="color:${TEXT}">${updated.email}</strong> ne recevra plus d'emails de rappel.</p>
+       <p><strong style="color:${TEXT}">Tu gardes ta place #${updated.position}</strong> sur la liste d'attente. On te contactera seulement quand ton accès sera prêt au lancement.</p>
        <a href="/" class="btn">Retour à l'accueil</a>`
     ),
     { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } }
