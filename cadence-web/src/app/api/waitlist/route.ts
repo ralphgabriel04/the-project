@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { waitlistSchema } from "@/lib/validations";
 import { createServerSupabaseClient } from "@/lib/supabase";
 import { createResendClient, getWaitlistConfirmationEmail } from "@/lib/resend";
@@ -55,24 +56,26 @@ export async function POST(request: NextRequest) {
     // Initialize Supabase
     const supabase = createServerSupabaseClient();
 
-    // Check for duplicate
+    // Check for existing row (active or previously unsubscribed)
     const { data: existingSubscriber } = await supabase
       .from("waitlist_subscribers")
-      .select("id")
+      .select("id, is_deleted")
       .eq("email", email)
-      .single();
+      .maybeSingle();
 
-    if (existingSubscriber) {
+    // Active subscriber → block duplicate
+    if (existingSubscriber && !existingSubscriber.is_deleted) {
       return NextResponse.json(
         { error: "Tu es déjà sur la liste ! \u{1F64C}" },
         { status: 409 }
       );
     }
 
-    // Get current count for position
+    // Get current count of ACTIVE subscribers for position
     const { count } = await supabase
       .from("waitlist_subscribers")
-      .select("*", { count: "exact", head: true });
+      .select("*", { count: "exact", head: true })
+      .eq("is_deleted", false);
 
     const position = (count ?? 0) + 1;
 
@@ -80,37 +83,77 @@ export async function POST(request: NextRequest) {
     const consentText =
       "J'accepte de recevoir des nouvelles de Cadence par courriel. Je peux me désabonner en tout temps.";
 
-    // Insert new subscriber with LCAP fields
-    const { data: newSubscriber, error: insertError } = await supabase
-      .from("waitlist_subscribers")
-      .insert({
-        email,
-        source: "landing_page",
-        confirmed: false,
-        position,
-        consent_text: consentText,
-        consent_ip: ip,
-        consent_timestamp: new Date().toISOString(),
-      })
-      .select("referral_code, unsubscribe_token")
-      .single();
+    const consentPayload = {
+      confirmed: false,
+      position,
+      consent_text: consentText,
+      consent_ip: ip,
+      consent_timestamp: new Date().toISOString(),
+    };
 
-    if (insertError) {
-      console.error(
-        "Supabase insert error —",
-        "message:", insertError.message,
-        "code:", insertError.code,
-        "details:", insertError.details,
-        "hint:", insertError.hint,
-      );
-      return NextResponse.json(
-        { error: "Oups, quelque chose a planté. Réessaie dans un instant." },
-        { status: 500 }
-      );
+    let referralCode: string | null = null;
+    let unsubscribeToken: string | null = null;
+
+    if (existingSubscriber?.is_deleted) {
+      // Reactivate previously unsubscribed row with a fresh consent record
+      // and a rotated unsubscribe_token so old email links stop working.
+      const { data: reactivated, error: updateError } = await supabase
+        .from("waitlist_subscribers")
+        .update({
+          ...consentPayload,
+          is_deleted: false,
+          unsubscribed_at: null,
+          unsubscribe_token: randomUUID(),
+        })
+        .eq("id", existingSubscriber.id)
+        .select("referral_code, unsubscribe_token")
+        .single();
+
+      if (updateError || !reactivated) {
+        console.error(
+          "Supabase reactivate error —",
+          "message:", updateError?.message,
+          "code:", updateError?.code,
+          "details:", updateError?.details,
+          "hint:", updateError?.hint,
+        );
+        return NextResponse.json(
+          { error: "Oups, quelque chose a planté. Réessaie dans un instant." },
+          { status: 500 }
+        );
+      }
+
+      referralCode = reactivated.referral_code ?? null;
+      unsubscribeToken = reactivated.unsubscribe_token ?? null;
+    } else {
+      // Insert brand-new subscriber
+      const { data: newSubscriber, error: insertError } = await supabase
+        .from("waitlist_subscribers")
+        .insert({
+          email,
+          source: "landing_page",
+          ...consentPayload,
+        })
+        .select("referral_code, unsubscribe_token")
+        .single();
+
+      if (insertError) {
+        console.error(
+          "Supabase insert error —",
+          "message:", insertError.message,
+          "code:", insertError.code,
+          "details:", insertError.details,
+          "hint:", insertError.hint,
+        );
+        return NextResponse.json(
+          { error: "Oups, quelque chose a planté. Réessaie dans un instant." },
+          { status: 500 }
+        );
+      }
+
+      referralCode = newSubscriber?.referral_code ?? null;
+      unsubscribeToken = newSubscriber?.unsubscribe_token ?? null;
     }
-
-    const referralCode = newSubscriber?.referral_code ?? null;
-    const unsubscribeToken = newSubscriber?.unsubscribe_token ?? null;
 
     // Send confirmation email
     const resend = createResendClient();
