@@ -134,6 +134,12 @@ export function getWaitlistConfirmationEmail(opts: WaitlistEmailOptions) {
                 <span style="color: ${DIM}; font-size: 13px;">Cofondateurs de ${COMPANY_NAME}</span>
               </p>
 
+              <!-- In-card unsubscribe (visible even if Outlook clips footer) -->
+              <p style="margin: 32px 0 0; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.08); font-size: 13px; line-height: 1.6; color: ${MUTED}; text-align: center;">
+                Tu ne veux plus recevoir ces courriels ?
+                <a href="${unsubscribeUrl}" style="color: ${ACCENT}; text-decoration: underline; font-weight: 600;">Se désabonner en un clic</a>
+              </p>
+
             </td>
           </tr>
 
@@ -159,12 +165,12 @@ export function getWaitlistConfirmationEmail(opts: WaitlistEmailOptions) {
           <!-- Unsubscribe + privacy -->
           <tr>
             <td align="center" style="padding: 12px 8px 32px;">
-              <p style="margin: 0; font-size: 12px; line-height: 1.8; color: ${FAINT};">
-                <a href="${unsubscribeUrl}" style="color: ${MUTED}; text-decoration: underline;">Se désabonner</a>
+              <p style="margin: 0; font-size: 13px; line-height: 1.8; color: ${MUTED};">
+                <a href="${unsubscribeUrl}" style="color: ${TEXT}; text-decoration: underline; font-weight: 600;">Se désabonner</a>
                 &nbsp;·&nbsp;
-                <a href="${BASE_URL}/privacy" style="color: ${MUTED}; text-decoration: underline;">Politique de confidentialité</a>
+                <a href="${BASE_URL}/privacy" style="color: ${TEXT}; text-decoration: underline;">Politique de confidentialité</a>
                 &nbsp;·&nbsp;
-                <a href="mailto:${REPLY_TO_EMAIL}" style="color: ${MUTED}; text-decoration: underline;">Nous contacter</a>
+                <a href="mailto:${REPLY_TO_EMAIL}" style="color: ${TEXT}; text-decoration: underline;">Nous contacter</a>
               </p>
             </td>
           </tr>
