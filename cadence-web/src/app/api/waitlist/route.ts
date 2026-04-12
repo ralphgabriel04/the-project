@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
         consent_ip: ip,
         consent_timestamp: new Date().toISOString(),
       })
-      .select("referral_code")
+      .select("referral_code, unsubscribe_token")
       .single();
 
     if (insertError) {
@@ -110,22 +110,36 @@ export async function POST(request: NextRequest) {
     }
 
     const referralCode = newSubscriber?.referral_code ?? null;
+    const unsubscribeToken = newSubscriber?.unsubscribe_token ?? null;
 
     // Send confirmation email
     const resend = createResendClient();
-    if (resend) {
-      const emailContent = getWaitlistConfirmationEmail(position, referralCode);
+    if (resend && unsubscribeToken) {
+      const emailContent = getWaitlistConfirmationEmail({
+        position,
+        referralCode,
+        unsubscribeToken,
+      });
       const fromEmail =
         process.env.RESEND_FROM_EMAIL || "Cadence <onboarding@resend.dev>";
 
       try {
-        await resend.emails.send({
+        const { error: sendError } = await resend.emails.send({
           from: fromEmail,
           to: email,
+          replyTo: emailContent.replyTo,
           subject: emailContent.subject,
           html: emailContent.html,
           text: emailContent.text,
+          headers: emailContent.headers,
         });
+        if (sendError) {
+          console.error(
+            "Resend send error —",
+            "name:", sendError.name,
+            "message:", sendError.message,
+          );
+        }
       } catch (emailError) {
         console.error("Failed to send confirmation email:", emailError);
       }
