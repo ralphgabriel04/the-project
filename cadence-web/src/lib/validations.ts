@@ -34,9 +34,7 @@ export const waitlistSchema = z.object({
     .refine((val) => val === true, {
       message: "Tu dois accepter pour t'inscrire.",
     }),
-  turnstileToken: z
-    .string()
-    .min(1, "Un instant — on vérifie que tu n'es pas un bot."),
+  turnstileToken: z.string().default(""),
 });
 
 export type WaitlistInput = z.infer<typeof waitlistSchema>;

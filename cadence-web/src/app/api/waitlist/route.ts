@@ -53,9 +53,9 @@ export async function POST(request: NextRequest) {
 
     const { email, turnstileToken } = result.data;
 
-    // Verify Cloudflare Turnstile token server-side
+    // Verify Cloudflare Turnstile token server-side (skip if widget failed on client)
     const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
-    if (turnstileSecret) {
+    if (turnstileSecret && turnstileToken) {
       const verifyForm = new URLSearchParams();
       verifyForm.append("secret", turnstileSecret);
       verifyForm.append("response", turnstileToken);

@@ -26,6 +26,7 @@ export function WaitlistForm() {
   const [isPending, startTransition] = useTransition();
   const [copied, setCopied] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileFailed, setTurnstileFailed] = useState(false);
   const referralRef = useRef<HTMLInputElement>(null);
   const turnstileRef = useRef<TurnstileInstance | null>(null);
 
@@ -45,7 +46,7 @@ export function WaitlistForm() {
       return;
     }
 
-    if (!turnstileToken) {
+    if (!turnstileToken && !turnstileFailed) {
       setFormState("error");
       setResponse({
         error: "Un instant — on vérifie que tu n'es pas un bot.",
@@ -64,7 +65,7 @@ export function WaitlistForm() {
           body: JSON.stringify({
             email: email.toLowerCase().trim(),
             consent,
-            turnstileToken,
+            turnstileToken: turnstileToken || "",
           }),
         });
 
@@ -215,7 +216,10 @@ export function WaitlistForm() {
             ref={turnstileRef}
             siteKey={TURNSTILE_SITE_KEY}
             onSuccess={(token) => setTurnstileToken(token)}
-            onError={() => setTurnstileToken(null)}
+            onError={() => {
+              setTurnstileToken(null);
+              setTurnstileFailed(true);
+            }}
             onExpire={() => setTurnstileToken(null)}
             options={{ theme: "dark", size: "flexible" }}
           />
