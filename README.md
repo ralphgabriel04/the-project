@@ -1,83 +1,105 @@
-# 🏋️ THE PROJECT
+# Cadence
 
-> Athlete-first coaching platform – MVP web app built with Next.js, Supabase & Stripe
+> Plateforme de coaching sportif bilingue FR/EN — beachhead Quebec (coachs muscu independants + leurs athletes)
 
-## 🎯 Vision
+## Equipe
 
-THE PROJECT est une plateforme de coaching sportif intelligent, conçue pour :
-- Améliorer la communication coach ↔ athlète
-- Rendre les programmes d'entraînement clairs et exécutables
-- Offrir un suivi structuré et motivant de la performance
+| Qui | Role | GitHub |
+|-----|------|--------|
+| Ralph Christian Gabriel | Dev, Product, Business | [@ralphgabriel04](https://github.com/ralphgabriel04) |
+| Alexandre Boisvert | Design, UX/UI, Branding, Marketing | [@abois15](https://github.com/abois15) |
 
-## 🛠️ Stack technique
+## Structure du monorepo
+
+```
+the-project/
+├── design/          # Maquettes et wireframes (Alexandre)
+├── web/
+│   ├── app/         # Dashboard coach/athlete — Next.js 16, Supabase, Stripe
+│   └── landing/     # Landing page marketing — Next.js 16, waitlist, analytics
+├── mobile/          # Placeholder (code dans cadence-mobile, repo separe)
+├── docs/            # Documentation transverse (roadmap, specs, ADRs)
+├── supabase/        # Migrations SQL (partagees entre web et mobile)
+└── pnpm-workspace.yaml
+```
+
+## Stack technique
 
 | Technologie | Usage |
 |-------------|-------|
-| **Next.js 16** | Frontend + API Routes (App Router) |
-| **TypeScript** | Typage strict |
-| **Tailwind CSS 4** | Styling |
-| **Supabase** | Auth, Database (PostgreSQL), Storage |
-| **Stripe** | Paiements & Abonnements |
-| **Vercel** | Déploiement |
-| **pnpm** | Gestionnaire de paquets |
+| Next.js 16 | Frontend + API Routes (App Router) |
+| TypeScript | Typage strict |
+| Tailwind CSS 4 | Styling |
+| Supabase | Auth, Database (PostgreSQL), Storage |
+| Stripe | Paiements et abonnements |
+| Vercel | Deploiement |
+| pnpm | Gestionnaire de paquets (workspaces) |
+| React Native + Expo SDK 54 | App mobile (repo separe) |
 
-## 🚀 Getting Started
+## Demarrage rapide
 
-### Prérequis
+### Prerequis
 
 - Node.js 18.17+
 - pnpm (`npm install -g pnpm`)
 - Compte Supabase (gratuit)
-- Compte Stripe (mode test)
 
 ### Installation
 
 ```bash
-# Cloner le repo
-git clone https://github.com/your-username/the-project.git
+git clone https://github.com/ralphgabriel04/the-project.git
 cd the-project
-
-# Installer les dépendances
 pnpm install
-
-# Configurer les variables d'environnement
-cp .env.example .env.local
-# Remplir les valeurs dans .env.local
-
-# Lancer le serveur de développement
-pnpm dev
 ```
 
-Ouvrir [http://localhost:3000](http://localhost:3000) dans votre navigateur.
-
-## 📁 Structure du projet
-
-```
-src/
-├── app/                    # App Router (pages, layouts, API routes)
-│   ├── (auth)/             # Routes groupées : login, register
-│   ├── (dashboard)/        # Routes protégées
-│   ├── api/                # Route Handlers
-│   ├── layout.tsx          # Layout racine
-│   └── page.tsx            # Landing page
-├── components/             # Composants UI
-│   ├── ui/                 # Design system
-│   └── features/           # Composants métier
-├── lib/                    # Utilitaires
-│   ├── supabase/           # Client Supabase
-│   └── stripe/             # Helpers Stripe
-└── types/                  # Types TypeScript
-```
-
-## 📜 Scripts disponibles
+### Configuration
 
 ```bash
-pnpm dev      # Serveur de développement (Turbopack)
-pnpm build    # Build de production
-pnpm start    # Serveur de production
-pnpm lint     # Linter ESLint
+# Dashboard (app principale)
+cp web/app/.env.example web/app/.env.local
+# Remplir les valeurs Supabase + Stripe
+
+# Landing page
+cp web/landing/.env.local.example web/landing/.env.local
+# Remplir les valeurs Supabase + Resend + PostHog
 ```
 
-## 📄 License
+### Lancer en dev
 
-Propriétaire - Tous droits réservés
+```bash
+# Dashboard coach/athlete (port 3000)
+pnpm dev:app
+
+# Landing page marketing (port 3000)
+pnpm dev:landing
+
+# Raccourci : pnpm dev = pnpm dev:app
+```
+
+## Scripts disponibles
+
+```bash
+pnpm dev:app       # Dev server dashboard (Turbopack)
+pnpm dev:landing   # Dev server landing page
+pnpm build:app     # Build production dashboard
+pnpm build:landing # Build production landing
+pnpm lint          # Lint tous les workspaces
+```
+
+## Branches
+
+| Branche | Role |
+|---------|------|
+| `main` | Production — deploiements Vercel |
+| `develop` | Integration — PRs mergees ici avant main |
+| `feature/*` | Branches de travail |
+
+## Liens utiles
+
+- [Roadmap produit](docs/FEATURES_ROADMAP.md)
+- [Convention design/](design/README.md)
+- [App mobile (repo separe)](https://github.com/ralphgabriel04/cadence-mobile)
+
+## License
+
+Proprietaire — Tous droits reserves

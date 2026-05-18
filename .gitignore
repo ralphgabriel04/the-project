@@ -1,20 +1,19 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-/node_modules
+node_modules/
 /.pnp
 .pnp.js
 .yarn/install-state.gz
 
 # testing
-/coverage
+coverage/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
+dist/
 
 # misc
 .DS_Store
@@ -50,4 +49,8 @@ next-env.d.ts
 .cursor/rules/*
 !.cursor/rules/.gitkeep
 
-.vercel
+# Design heavy files (handled by design/.gitignore too)
+DesignClaude/
+
+# Mobile repo clone (lives in separate repo)
+cadence-mobile/
