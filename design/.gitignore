@@ -1,0 +1,11 @@
+# Figma native files (too heavy for git)
+*.fig
+
+# Archives
+*.zip
+*.rar
+*.7z
+
+# Photoshop/Sketch
+*.psd
+*.sketch
