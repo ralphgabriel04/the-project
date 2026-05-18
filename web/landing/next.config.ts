@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const securityHeaders = [
   {
@@ -55,7 +56,7 @@ const nextConfig: NextConfig = {
   },
   poweredByHeader: false,
   turbopack: {
-    root: process.cwd(),
+    root: path.resolve(__dirname, "../.."),
   },
 };
 
