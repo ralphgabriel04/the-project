@@ -1,6 +1,6 @@
 # [Mobile] Coach — Programmes Details Bloc
 
-**Statut :** ⚪ Pas commence
+**Statut :** 🟡 En cours
 **Designer :** @abois15
 **Derniere mise a jour :** 2026-05-18
 **Lien Figma :** —
