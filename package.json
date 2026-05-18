@@ -1,0 +1,13 @@
+{
+  "name": "cadence-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:app": "pnpm --filter cadence-app dev",
+    "dev:landing": "pnpm --filter cadence-landing dev",
+    "build:app": "pnpm --filter cadence-app build",
+    "build:landing": "pnpm --filter cadence-landing build",
+    "lint": "pnpm -r lint",
+    "dev": "pnpm --filter cadence-app dev"
+  }
+}
