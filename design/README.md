@@ -2,11 +2,26 @@
 
 Maquettes et wireframes de Cadence, maintenues par **Alexandre Boisvert** (@abois15).
 
+## Pipeline design
+
+```
+wireframe/  →  design/
+(HTML brut)    (design final via Claude Design / Figma)
+```
+
+1. Creer un wireframe HTML dans `wireframe/{platform}/{persona}/{page}/`
+2. Valider le layout et le flow
+3. Convertir en design final (Claude Design ou Figma)
+4. Placer le resultat dans `design/{platform}/{persona}/{page}/`
+
 ## Architecture
 
 ```
 design/
-├── mobile/                          # App React Native (Expo)
+├── wireframe/                       # Wireframes HTML bruts (etape 1)
+│   ├── mobile/                      # Miroir exact de la structure ci-dessous
+│   └── web/
+├── mobile/                          # Designs finaux — App React Native (Expo)
 │   ├── athlete/                     # Ecrans athlete
 │   │   ├── accueil/                 # Dashboard athlete
 │   │   ├── session-live/            # Execution d'une seance
