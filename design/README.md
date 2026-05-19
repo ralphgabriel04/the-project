@@ -1,140 +1,274 @@
-# design/
+# design/ — Guide pour Alexandre
 
-Maquettes et wireframes de Cadence, maintenues par **Alexandre Boisvert** (@abois15).
+Salut Alex! Ce dossier est ton espace de travail pour les maquettes de Cadence.
+Voici tout ce que tu dois savoir pour naviguer, ajouter tes wireframes et les
+pousser sur GitHub.
 
-## Pipeline design
+---
+
+## Comment ca marche (le pipeline)
 
 ```
-wireframe/  →  design/
-(HTML brut)    (design final via Claude Design / Figma)
+TON TRAVAIL                          TRAVAIL DE RALPH
+─────────────────────────────────    ─────────────────────────────────
+design/wireframe/                →   design/mobile/ ou design/web/
+Tu mets tes wireframes HTML ici      Ralph les convertit en design
+                                     final avec Claude Design et
+                                     les place ici
 ```
 
-1. Creer un wireframe HTML dans `wireframe/{platform}/{persona}/{page}/`
-2. Valider le layout et le flow
-3. Convertir en design final (Claude Design ou Figma)
-4. Placer le resultat dans `design/{platform}/{persona}/{page}/`
+**En resume :**
+1. Tu crees un wireframe HTML (avec Claude, Figma, ou a la main)
+2. Tu le mets dans le bon dossier dans `wireframe/`
+3. Tu push sur GitHub
+4. Ralph le prend, le convertit en design final, et le met dans le dossier equivalent sous `design/mobile/` ou `design/web/`
 
-## Architecture
+---
+
+## Ou mettre tes fichiers
+
+### Comprendre l'arborescence
+
+L'architecture est organisee en 3 niveaux :
+
+```
+wireframe / {plateforme} / {persona} / {page ou section}
+```
+
+- **Plateforme** : `mobile/` (app React Native) ou `web/` (app Next.js)
+- **Persona** : `athlete/`, `coach/`, ou `shared/` (ecrans communs comme login)
+- **Page** : le nom de l'ecran en kebab-case francais
+
+### Arborescence complete
 
 ```
 design/
-├── wireframe/                       # Wireframes HTML bruts (etape 1)
-│   ├── mobile/                      # Miroir exact de la structure ci-dessous
+├── wireframe/                              << TU TRAVAILLES ICI
+│   ├── mobile/
+│   │   ├── athlete/
+│   │   │   ├── accueil/                    # Dashboard athlete
+│   │   │   ├── session-live/
+│   │   │   │   ├── musculation/            # Seance muscu en direct
+│   │   │   │   ├── intervalles/            # HIIT / intervalles
+│   │   │   │   └── distance-temps/         # Course, velo, etc.
+│   │   │   ├── programmes/                 # Programmes assignes
+│   │   │   ├── progression/                # Stats + PRs
+│   │   │   └── settings/                   # Preferences
+│   │   ├── coach/
+│   │   │   ├── accueil/                    # Dashboard coach
+│   │   │   ├── programmes/
+│   │   │   │   ├── liste/                  # Liste des programmes
+│   │   │   │   ├── creation/               # Creer un programme
+│   │   │   │   ├── modification/           # Modifier un programme
+│   │   │   │   └── details-bloc/           # Detail exercice
+│   │   │   ├── athletes/
+│   │   │   │   ├── liste/                  # Liste + invitations
+│   │   │   │   └── profil/                 # Fiche athlete
+│   │   │   ├── calendrier/                 # Vue calendrier
+│   │   │   ├── messages/                   # Messagerie
+│   │   │   └── settings/                   # Preferences coach
+│   │   └── shared/
+│   │       ├── connexion/                  # Login
+│   │       ├── inscription/                # Signup
+│   │       ├── mot-de-passe-oublie/        # Reset password
+│   │       ├── onboarding/                 # Premier lancement
+│   │       └── profil/                     # Profil utilisateur
 │   └── web/
-├── mobile/                          # Designs finaux — App React Native (Expo)
-│   ├── athlete/                     # Ecrans athlete
-│   │   ├── accueil/                 # Dashboard athlete
-│   │   ├── session-live/            # Execution d'une seance
-│   │   │   ├── musculation/
-│   │   │   ├── intervalles/
-│   │   │   └── distance-temps/
-│   │   ├── programmes/              # Consultation des programmes assignes
-│   │   ├── progression/             # Stats et historique
-│   │   └── settings/                # Preferences athlete
-│   ├── coach/                       # Ecrans coach
-│   │   ├── accueil/                 # Dashboard coach
-│   │   ├── programmes/              # Gestion des programmes
-│   │   │   ├── liste/               # Liste des programmes
-│   │   │   ├── creation/            # Creer un programme
-│   │   │   ├── modification/        # Modifier un programme
-│   │   │   └── details-bloc/        # Detail d'un bloc/exercice
-│   │   ├── athletes/                # Gestion des athletes
-│   │   │   ├── liste/               # Liste + invitations
-│   │   │   └── profil/              # Fiche athlete
-│   │   ├── calendrier/              # Vue calendrier
-│   │   ├── messages/                # Messagerie coach-athlete
-│   │   └── settings/                # Preferences coach
-│   └── shared/                      # Ecrans communs aux deux roles
-│       ├── connexion/               # Login
-│       ├── inscription/             # Signup avec selection de role
-│       ├── mot-de-passe-oublie/     # Reset password
-│       ├── onboarding/              # Premier lancement
-│       └── profil/                  # Profil utilisateur
+│       ├── athlete/
+│       │   ├── accueil/
+│       │   ├── entrainement/
+│       │   ├── progression/
+│       │   └── messages/
+│       ├── coach/
+│       │   ├── accueil/
+│       │   ├── programmes/
+│       │   ├── athletes/
+│       │   ├── calendrier/
+│       │   ├── messages/
+│       │   └── settings/
+│       └── shared/
+│           ├── connexion/
+│           ├── inscription/
+│           └── landing/                    # Page marketing waitlist
 │
-├── web/                             # App Next.js (dashboard)
-│   ├── athlete/                     # Dashboard web athlete
-│   │   ├── accueil/
-│   │   ├── entrainement/
-│   │   ├── progression/
-│   │   └── messages/
-│   ├── coach/                       # Dashboard web coach
-│   │   ├── accueil/
-│   │   ├── programmes/
-│   │   ├── athletes/
-│   │   ├── calendrier/
-│   │   ├── messages/
-│   │   └── settings/
-│   ├── shared/                      # Ecrans web communs
-│   │   ├── connexion/
-│   │   ├── inscription/
-│   │   └── landing/                 # Page marketing / waitlist
-│   └── README.md
+├── mobile/                                 << RALPH MET LES DESIGNS FINAUX ICI
+│   └── (meme structure que wireframe/mobile/)
 │
-└── README.md                        # Ce fichier
+├── web/                                    << RALPH MET LES DESIGNS FINAUX ICI
+│   └── (meme structure que wireframe/web/)
+│
+└── README.md                               # Ce fichier
 ```
 
-## Convention de nommage
+### Exemple concret
 
-Les dossiers utilisent le **kebab-case** en francais. Chaque dossier de page
-contient un README qui decrit clairement l'objectif de la page.
-
-## Contenu d'un dossier de page
+Tu viens de creer un wireframe pour l'ecran de creation de programme du coach
+sur mobile. Tu le mets ici :
 
 ```
-design/mobile/coach/programmes/creation/
-├── README.md           # Obligatoire : objectif, persona, flow, statut
-├── *.html              # Wireframes HTML (generes via Claude ou autre)
-├── *.png / *.jpg       # Exports Figma (screenshots)
-└── assets/             # Optionnel : icones, images specifiques
+design/wireframe/mobile/coach/programmes/creation/mon-wireframe.html
 ```
 
-## Statuts
+Ralph le prendra et mettra le design final ici :
 
-| Icone | Statut | Description |
-|-------|--------|-------------|
-| ⚪ | Pas commence | Dossier cree, rien dedans |
-| 🟡 | En cours | Wireframes en developpement |
-| 🟢 | Valide | Approuve par Ralph + Alex, pret pour dev |
-| 🔴 | A revoir | Feedback recu, necessite des changements |
+```
+design/mobile/coach/programmes/creation/creation-programme-final.html
+```
 
-## Template README pour chaque page
+---
 
-```markdown
-# [Plateforme] [Persona] — [Page]
+## Quoi mettre dans un dossier
 
+```
+design/wireframe/mobile/coach/programmes/creation/
+├── README.md                    # Deja la — objectif de la page
+├── mon-wireframe.html           # Ton wireframe HTML
+├── variante-2.html              # Optionnel : autre version
+├── screenshot.png               # Optionnel : capture d'ecran
+└── notes.md                     # Optionnel : tes notes de design
+```
+
+**Formats acceptes :** `.html`, `.png`, `.jpg`, `.md`
+**Formats ignores par git :** `.fig`, `.zip`, `.psd`, `.sketch` (trop lourds)
+
+---
+
+## Comment pousser tes fichiers sur GitHub (pas a pas)
+
+### Prerequis (une seule fois)
+
+```bash
+# 1. Installe Git si pas deja fait
+# Sur Mac : brew install git
+# Sur Windows : https://git-scm.com/download/win
+
+# 2. Clone le repo (une seule fois)
+git clone https://github.com/ralphgabriel04/the-project.git
+
+# 3. Entre dans le repo
+cd the-project
+```
+
+### A chaque fois que tu veux ajouter un wireframe
+
+```bash
+# 1. Assure-toi d'etre a jour
+git pull origin main
+
+# 2. Navigue vers le bon dossier
+# Exemple : wireframe pour l'accueil coach mobile
+cd design/wireframe/mobile/coach/accueil/
+
+# 3. Copie/deplace ton fichier HTML ici
+# (avec le Finder/Explorateur ou en ligne de commande)
+cp ~/Desktop/accueil-coach.html .
+
+# 4. Reviens a la racine du projet
+cd ../../../../../..
+# OU plus simple :
+cd "C:\Users\ralph\OneDrive\Documents\GitHub\the-project"   # Windows
+cd ~/Documents/GitHub/the-project                             # Mac
+
+# 5. Verifie ce qui a change
+git status
+
+# 6. Ajoute tes fichiers
+git add design/wireframe/
+
+# 7. Cree un commit avec un message clair
+git commit -m "feat(design): ajouter wireframe accueil coach mobile"
+
+# 8. Pousse sur GitHub
+git push origin main
+```
+
+### Raccourci rapide (copier-coller)
+
+```bash
+git pull origin main
+git add design/wireframe/
+git commit -m "feat(design): ajouter wireframe [NOM DE LA PAGE]"
+git push origin main
+```
+
+### Messages de commit — convention
+
+Utilise ce format : `feat(design): [ce que tu as fait]`
+
+Exemples :
+- `feat(design): ajouter wireframe accueil coach mobile`
+- `feat(design): ajouter wireframe session live musculation`
+- `feat(design): mettre a jour wireframe inscription`
+- `feat(design): ajouter variante 2 calendrier coach`
+
+---
+
+## Commandes Git utiles
+
+| Commande | Ca fait quoi |
+|----------|-------------|
+| `git status` | Voir quels fichiers ont change |
+| `git pull origin main` | Recuperer les derniers changements |
+| `git add design/wireframe/` | Preparer tes fichiers pour le commit |
+| `git commit -m "message"` | Sauvegarder tes changements localement |
+| `git push origin main` | Envoyer sur GitHub |
+| `git log --oneline -5` | Voir les 5 derniers commits |
+| `git diff` | Voir ce qui a change dans les fichiers |
+
+### Si tu as un probleme
+
+```bash
+# Annuler les changements pas encore commites
+git checkout -- .
+
+# Voir sur quelle branche tu es
+git branch
+
+# Si tu n'es pas sur main
+git checkout main
+```
+
+---
+
+## Statuts dans les README
+
+Chaque dossier de page a un README.md avec un statut. Tu peux le mettre a
+jour quand tu travailles dessus :
+
+| Icone | Statut | Quand l'utiliser |
+|-------|--------|-----------------|
+| ⚪ | Pas commence | Dossier vide, rien fait encore |
+| 🟡 | En cours | Tu travailles sur le wireframe |
+| 🟢 | Valide | Ralph et toi avez approuve |
+| 🔴 | A revoir | Ralph a donne du feedback |
+| 🔵 | Converti | Ralph a cree le design final |
+
+Pour changer le statut, ouvre le README.md du dossier et remplace la ligne :
+```
 **Statut :** ⚪ Pas commence
-**Designer :** @abois15
-**Derniere mise a jour :** YYYY-MM-DD
-**Lien Figma :** (optionnel)
-
-## Objectif
-Quel probleme cette page resout pour l'utilisateur. En 1-2 phrases.
-
-## Persona
-Qui utilise cette page et dans quel contexte.
-
-## Elements cles
-- Liste des composants/sections principaux de la page
-- Ce que l'utilisateur peut faire ici
-
-## Flow
-D'ou vient l'utilisateur → cette page → ou va-t-il ensuite.
-
-## Notes
-- Decisions de design prises
-- Questions ouvertes
+```
+par :
+```
+**Statut :** 🟡 En cours
 ```
 
-## Fichiers ignores
+---
 
-Les fichiers `.fig` (Figma natif) et `.zip` (archives) sont ignores par git —
-trop lourds. Seuls les exports (HTML, PNG, JPG) et les READMEs sont versionnes.
+## Fichiers deja presents (wireframes existants)
 
-## Workflow
+Ces wireframes existent deja dans `wireframe/` :
 
-1. Alex cree le dossier de page au bon endroit dans l'arborescence
-2. Il ajoute le README avec l'objectif et le statut ⚪
-3. Il pousse ses wireframes HTML ou exports Figma
-4. Il met le statut a 🟡
-5. Ralph review et valide (🟢) ou demande des changements (🔴)
-6. Une fois 🟢, le dev peut commencer l'implementation
+| Page | Fichier | Statut |
+|------|---------|--------|
+| Coach > Programmes > Creation | `ajouter-une-seance.html` | 🟡 |
+| Coach > Programmes > Details bloc | `details-du-bloc.html` | 🟡 |
+| Coach > Programmes > Liste | `programme.html` | 🟡 |
+| Athlete > Session live > Musculation | `live-session-musculation.html` | 🟡 |
+| Athlete > Session live > Intervalles | `live-session-intervalles.html` | 🟡 |
+| Athlete > Session live > Distance/Temps | `live-session-distance-temps.html` | 🟡 |
+
+---
+
+## Questions?
+
+Ecris a Ralph sur Discord ou ouvre une issue sur GitHub.
