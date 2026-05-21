@@ -6,6 +6,55 @@ pousser sur GitHub.
 
 ---
 
+## Architecture du dossier design
+
+Le dossier est organise en 5 sections principales :
+
+```
+design/
+├── mapping-coach/                          << MAPPING FONCTIONNEL COACH
+│   ├── 00_Design-System/                   # Couleurs, typo, composants, icones, tokens
+│   ├── 01_Authentication/                  # Connexion, inscription, onboarding (4 etapes)
+│   ├── 02_Accueil/                         # Hub principal coach
+│   ├── 03_Athletes/                        # Individuels + Groupes (coeur de l'app)
+│   │   ├── 01_Individuels/                 # Vue liste, ajout, apercu, historique, programmes, notes
+│   │   └── 02_Groupes/                     # Vue groupes, creation, membres, programmes, notes
+│   ├── 04_Seances/                         # Live, modification, ajout, suppression, bottom sheet
+│   ├── 05_Construction-Seance/             # Sport, musculation, mobilite, blocs
+│   ├── 06_Duplication/                     # Dupliquer vers athlete ou groupe
+│   ├── 07_Live/                            # Module live (a detailler)
+│   ├── 08_Planification/                   # Module planification (a detailler)
+│   ├── 09_Profil-Coach/                    # Module profil coach (a detailler)
+│   ├── 10_Flows-Userflows/                 # Diagrammes de flux
+│   └── 11_Assets-Resources/                # Illustrations, photos, exports
+│
+├── mapping-athlete/                        << MAPPING FONCTIONNEL ATHLETE
+│   ├── 00_Foundations/                     # Colors, typo, spacing, icono, logo
+│   ├── 01_Components/                      # Buttons, inputs, cards, bottom sheets, nav, blocs
+│   ├── 02_Authentification/                # Splash, connexion, inscription, onboarding (4 etapes)
+│   ├── 03_Accueil/                         # Dashboard + acces rapides
+│   ├── 04_Statistiques/                    # Performance, historique (noeud vert)
+│   ├── 05_Profil_Athlete/                  # Consultation + edition (noeud turquoise)
+│   ├── 06_Programme_Entrainement/          # Liste, modifier, supprimer, commencer, inscrire
+│   ├── 07_Creation_Seance/                 # Templates, sport, construction, blocs
+│   ├── 08_User_Flows/                      # Diagrammes de flux
+│   └── 09_Ressources/                      # FigJam, moodboard, references
+│
+├── wireframe/                              << WIREFRAMES HTML (Alex travaille ici)
+│   ├── mobile/                             # Wireframes mobile par persona
+│   └── web/                                # Wireframes web par persona
+│
+├── mobile/                                 << DESIGNS FINAUX MOBILE (Ralph)
+│   └── (meme structure que wireframe/mobile/)
+│
+├── web/                                    << DESIGNS FINAUX WEB (Ralph)
+│   └── (meme structure que wireframe/web/)
+│
+└── README.md                               # Ce fichier
+```
+
+---
+
 ## Comment ca marche (le pipeline)
 
 ```
@@ -17,19 +66,24 @@ Tu mets tes wireframes HTML ici      Ralph les convertit en design
                                      les place ici
 ```
 
+Les dossiers `mapping-coach/` et `mapping-athlete/` servent de **reference
+fonctionnelle** : ils decrivent chaque ecran, chaque flux, et chaque composant
+a concevoir. Consulte-les pour savoir quoi wireframer.
+
 **En resume :**
-1. Tu crees un wireframe HTML (avec Claude, Figma, ou a la main)
-2. Tu le mets dans le bon dossier dans `wireframe/`
-3. Tu push sur GitHub
-4. Ralph le prend, le convertit en design final, et le met dans le dossier equivalent sous `design/mobile/` ou `design/web/`
+1. Consulte `mapping-coach/` ou `mapping-athlete/` pour voir ce qui est attendu
+2. Tu crees un wireframe HTML (avec Claude, Figma, ou a la main)
+3. Tu le mets dans le bon dossier dans `wireframe/`
+4. Tu push sur GitHub
+5. Ralph le prend, le convertit en design final, et le met dans le dossier equivalent sous `design/mobile/` ou `design/web/`
 
 ---
 
-## Ou mettre tes fichiers
+## Ou mettre tes fichiers wireframe
 
-### Comprendre l'arborescence
+### Comprendre l'arborescence wireframe
 
-L'architecture est organisee en 3 niveaux :
+L'architecture wireframe est organisee en 3 niveaux :
 
 ```
 wireframe / {plateforme} / {persona} / {page ou section}
@@ -39,65 +93,56 @@ wireframe / {plateforme} / {persona} / {page ou section}
 - **Persona** : `athlete/`, `coach/`, ou `shared/` (ecrans communs comme login)
 - **Page** : le nom de l'ecran en kebab-case francais
 
-### Arborescence complete
+### Arborescence wireframe
 
 ```
-design/
-├── wireframe/                              << TU TRAVAILLES ICI
-│   ├── mobile/
-│   │   ├── athlete/
-│   │   │   ├── accueil/                    # Dashboard athlete
-│   │   │   ├── session-live/
-│   │   │   │   ├── musculation/            # Seance muscu en direct
-│   │   │   │   ├── intervalles/            # HIIT / intervalles
-│   │   │   │   └── distance-temps/         # Course, velo, etc.
-│   │   │   ├── programmes/                 # Programmes assignes
-│   │   │   ├── progression/                # Stats + PRs
-│   │   │   └── settings/                   # Preferences
-│   │   ├── coach/
-│   │   │   ├── accueil/                    # Dashboard coach
-│   │   │   ├── programmes/
-│   │   │   │   ├── liste/                  # Liste des programmes
-│   │   │   │   ├── creation/               # Creer un programme
-│   │   │   │   ├── modification/           # Modifier un programme
-│   │   │   │   └── details-bloc/           # Detail exercice
-│   │   │   ├── athletes/
-│   │   │   │   ├── liste/                  # Liste + invitations
-│   │   │   │   └── profil/                 # Fiche athlete
-│   │   │   ├── calendrier/                 # Vue calendrier
-│   │   │   ├── messages/                   # Messagerie
-│   │   │   └── settings/                   # Preferences coach
-│   │   └── shared/
-│   │       ├── connexion/                  # Login
-│   │       ├── inscription/                # Signup
-│   │       ├── mot-de-passe-oublie/        # Reset password
-│   │       ├── onboarding/                 # Premier lancement
-│   │       └── profil/                     # Profil utilisateur
-│   └── web/
-│       ├── athlete/
-│       │   ├── accueil/
-│       │   ├── entrainement/
-│       │   ├── progression/
-│       │   └── messages/
-│       ├── coach/
-│       │   ├── accueil/
-│       │   ├── programmes/
-│       │   ├── athletes/
-│       │   ├── calendrier/
-│       │   ├── messages/
-│       │   └── settings/
-│       └── shared/
-│           ├── connexion/
-│           ├── inscription/
-│           └── landing/                    # Page marketing waitlist
-│
-├── mobile/                                 << RALPH MET LES DESIGNS FINAUX ICI
-│   └── (meme structure que wireframe/mobile/)
-│
-├── web/                                    << RALPH MET LES DESIGNS FINAUX ICI
-│   └── (meme structure que wireframe/web/)
-│
-└── README.md                               # Ce fichier
+design/wireframe/
+├── mobile/
+│   ├── athlete/
+│   │   ├── accueil/                    # Dashboard athlete
+│   │   ├── session-live/
+│   │   │   ├── musculation/            # Seance muscu en direct
+│   │   │   ├── intervalles/            # HIIT / intervalles
+│   │   │   └── distance-temps/         # Course, velo, etc.
+│   │   ├── programmes/                 # Programmes assignes
+│   │   ├── progression/                # Stats + PRs
+│   │   └── settings/                   # Preferences
+│   ├── coach/
+│   │   ├── accueil/                    # Dashboard coach
+│   │   ├── programmes/
+│   │   │   ├── liste/                  # Liste des programmes
+│   │   │   ├── creation/               # Creer un programme
+│   │   │   ├── modification/           # Modifier un programme
+│   │   │   └── details-bloc/           # Detail exercice
+│   │   ├── athletes/
+│   │   │   ├── liste/                  # Liste + invitations
+│   │   │   └── profil/                 # Fiche athlete
+│   │   ├── calendrier/                 # Vue calendrier
+│   │   ├── messages/                   # Messagerie
+│   │   └── settings/                   # Preferences coach
+│   └── shared/
+│       ├── connexion/                  # Login
+│       ├── inscription/                # Signup
+│       ├── mot-de-passe-oublie/        # Reset password
+│       ├── onboarding/                 # Premier lancement
+│       └── profil/                     # Profil utilisateur
+└── web/
+    ├── athlete/
+    │   ├── accueil/
+    │   ├── entrainement/
+    │   ├── progression/
+    │   └── messages/
+    ├── coach/
+    │   ├── accueil/
+    │   ├── programmes/
+    │   ├── athletes/
+    │   ├── calendrier/
+    │   ├── messages/
+    │   └── settings/
+    └── shared/
+        ├── connexion/
+        ├── inscription/
+        └── landing/                    # Page marketing waitlist
 ```
 
 ### Exemple concret
