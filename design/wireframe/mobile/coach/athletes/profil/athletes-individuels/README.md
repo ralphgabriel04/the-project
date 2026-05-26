@@ -1,4 +1,4 @@
-# Wireframe — [Mobile] Coach — Athletes Profil
+# Wireframe — [Mobile] Coach — Athletes Profils Individuels
 
 **Statut :** ⚪ Pas commence
 **Derniere mise a jour :** 2026-05-26
