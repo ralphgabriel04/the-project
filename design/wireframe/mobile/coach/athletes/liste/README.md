@@ -1,4 +1,4 @@
-# Wireframe — [Mobile] Coach — Athletes Liste
+# Wireframe — [Mobile] Coach — Athletes Listes
 
 **Statut :** ⚪ Pas commence
 **Derniere mise a jour :** 2026-05-18
