@@ -1,7 +1,7 @@
 # ADR-003 : Declenchement du kill switch, Phase 1-lite et schema canonique
 
 **Date :** 2026-08-17
-**Statut :** Accepte
+**Statut :** Accepte ; sections 2 (perimetre Phase 1-lite) et 5 (ordre de priorite) remplacees par ADR-005 (2026-10-01)
 **Decideurs :** Ralph Christian Gabriel, Alexandre Boisvert
 **Complemente :** ADR-001 (pivot 4 phases), ADR-002 (roadmap compressee)
 **Declenche :** la clause kill switch d'ADR-002
