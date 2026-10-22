@@ -54,3 +54,6 @@ DesignClaude/
 
 # Mobile repo clone (lives in separate repo)
 cadence-mobile/
+
+# Réglages personnels de Claude Code (jamais dans le dépôt public)
+.claude/settings.local.json
